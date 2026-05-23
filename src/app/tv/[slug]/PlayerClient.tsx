@@ -1,0 +1,107 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Clinic, Slide } from '@/lib/mock-data';
+import { AnimatePresence, motion } from 'framer-motion';
+
+interface PlayerClientProps {
+  clinic: Clinic;
+  slides: Slide[];
+}
+
+export default function PlayerClient({ clinic, slides }: PlayerClientProps) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Clock
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Slide Engine
+  useEffect(() => {
+    if (slides.length <= 1) return;
+
+    const currentSlide = slides[currentIndex];
+    
+    const timer = setTimeout(() => {
+      setCurrentIndex((prev) => (prev + 1) % slides.length);
+    }, currentSlide.duration_seconds * 1000);
+
+    return () => clearTimeout(timer);
+  }, [currentIndex, slides]);
+
+  const slide = slides[currentIndex];
+
+  return (
+    <div className="relative w-screen h-screen overflow-hidden bg-black">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={slide.id}
+          initial={{ opacity: 0, scale: 1.05 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1.5, ease: "easeInOut" }}
+          className="absolute inset-0 flex items-center justify-center"
+        >
+          {slide.type === 'image' && slide.content_url && (
+            <img 
+              src={slide.content_url} 
+              alt="Slide" 
+              className="w-full h-full object-cover"
+            />
+          )}
+
+          {slide.type === 'promo' && (
+            <div 
+              className="w-full h-full flex flex-col items-center justify-center p-12 text-center"
+              style={{ backgroundColor: clinic.primary_color }}
+            >
+              <h1 className="text-white text-6xl md:text-8xl font-black mb-8 leading-tight">
+                {slide.text_content}
+              </h1>
+              <div className="bg-white text-gray-900 text-3xl font-bold py-4 px-8 rounded-full shadow-2xl animate-pulse">
+                Aproveite agora!
+              </div>
+            </div>
+          )}
+
+          {slide.type === 'text' && (
+            <div className="w-full h-full flex items-center justify-center p-16 bg-gradient-to-br from-gray-900 to-gray-800">
+              <h1 className="text-white text-5xl md:text-7xl font-bold text-center leading-normal">
+                {slide.text_content}
+              </h1>
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Floating Info (Logo and Clock) */}
+      <div className="absolute top-0 left-0 w-full p-8 flex justify-between items-start z-50 pointer-events-none drop-shadow-lg">
+        {clinic.logo_url ? (
+          <img 
+            src={clinic.logo_url} 
+            alt={clinic.name} 
+            className="h-16 md:h-24 object-contain bg-white/10 backdrop-blur-md p-2 rounded-xl"
+          />
+        ) : (
+          <div 
+            className="text-white font-black text-3xl tracking-tight bg-black/30 backdrop-blur-md px-6 py-3 rounded-xl border border-white/10"
+          >
+            {clinic.name}
+          </div>
+        )}
+
+        <div className="bg-black/40 backdrop-blur-md px-6 py-3 rounded-xl border border-white/10 text-white text-right">
+          <div className="text-3xl font-bold tracking-wider">
+            {currentTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+          </div>
+          <div className="text-sm font-medium text-white/80">
+            {currentTime.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
