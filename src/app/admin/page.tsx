@@ -8,7 +8,7 @@ import { Modal } from '@/components/ui/Modal';
 import { ClinicStatus } from '@/lib/mock-data';
 
 export default function AdminDashboard() {
-  const { clinics, plans, addClinic, updateClinicStatus } = useAppStore();
+  const { clinics, plans, addClinicAsync, updateClinicStatusAsync } = useAppStore();
   
   const activeClinics = clinics.filter(c => c.status === 'active').length;
   const overdueClinics = clinics.filter(c => c.status === 'overdue').length;
@@ -33,10 +33,10 @@ export default function AdminDashboard() {
   const [editingClinicId, setEditingClinicId] = useState<string | null>(null);
   const [editStatus, setEditStatus] = useState<ClinicStatus>('active');
 
-  const handleCreateClinic = () => {
+  const handleCreateClinic = async () => {
     if (!newClinic.name || !newClinic.slug) return alert('Nome e Slug são obrigatórios.');
     
-    addClinic({
+    await addClinicAsync({
       ...newClinic,
       primary_color: '#000000',
       status: 'active',
@@ -49,9 +49,9 @@ export default function AdminDashboard() {
     });
   };
 
-  const handleUpdateStatus = () => {
+  const handleUpdateStatus = async () => {
     if (editingClinicId) {
-      updateClinicStatus(editingClinicId, editStatus);
+      await updateClinicStatusAsync(editingClinicId, editStatus);
       setEditingClinicId(null);
     }
   };
