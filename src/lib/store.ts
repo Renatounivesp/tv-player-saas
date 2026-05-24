@@ -30,15 +30,33 @@ export const useAppStore = create<AppState>()((set, get) => ({
   fetchInitialData: async () => {
     set({ isLoading: true });
     try {
-      const [clinicsRes, slidesRes, plansRes] = await Promise.all([
-        supabase.from('clinics').select('*'),
-        supabase.from('slides').select('*').order('order_index', { ascending: true }),
+      // Pega o usuário logado atualmente
+      const { data: { user } } = await supabase.auth.getUser();
+
+      let clinicsQuery = supabase.from('clinics').select('*');
+      
+      // Se for o dono do sistema (usando o painel admin), talvez mostre todas.
+      // Mas para a segurança do MVP, filtramos pela clínica que o usuário criou:
+      if (user) {
+        clinicsQuery = clinicsQuery.eq('user_id', user.id);
+      }
+
+      const [clinicsRes, plansRes] = await Promise.all([
+        clinicsQuery,
         supabase.from('plans').select('*')
       ]);
 
       if (clinicsRes.error) throw clinicsRes.error;
-      if (slidesRes.error) throw slidesRes.error;
       if (plansRes.error) throw plansRes.error;
+
+      // Pegar os slides de todas as clínicas do usuário (normalmente é só 1 clínica)
+      const clinicIds = clinicsRes.data ? clinicsRes.data.map(c => c.id) : [];
+      let slidesRes = { data: [], error: null as any };
+      
+      if (clinicIds.length > 0) {
+        slidesRes = await supabase.from('slides').select('*').in('clinic_id', clinicIds).order('order_index', { ascending: true });
+        if (slidesRes.error) throw slidesRes.error;
+      }
 
       set({
         clinics: clinicsRes.data as Clinic[],

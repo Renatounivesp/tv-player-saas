@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { LayoutDashboard, MonitorPlay, Image as ImageIcon, Settings, LogOut } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
+import { createClient } from '@/utils/supabase/client';
 
 export default function DashboardLayout({
   children,
@@ -11,6 +12,12 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { clinics, isLoading, fetchInitialData } = useAppStore();
+  const supabase = createClient();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.href = '/login';
+  };
 
   useEffect(() => {
     fetchInitialData();

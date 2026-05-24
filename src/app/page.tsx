@@ -29,7 +29,7 @@ export default function Home() {
               Acesso Admin
             </Link>
             <Link 
-              href="/dashboard" 
+              href="/login" 
               className="text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-full transition-all shadow-sm hover:shadow-md"
             >
               Entrar na Clínica
@@ -60,7 +60,7 @@ export default function Home() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link 
-              href="/dashboard" 
+              href="/cadastro" 
               className="w-full sm:w-auto px-8 py-4 bg-gray-900 hover:bg-black text-white rounded-full font-semibold text-lg transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1 flex items-center justify-center group"
             >
               Testar Gratuitamente
@@ -184,7 +184,7 @@ export default function Home() {
               </ul>
 
               <Link 
-                href="/dashboard" 
+                href="/cadastro" 
                 className="w-full py-4 px-6 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex justify-center items-center gap-2 bg-blue-600 text-white hover:bg-blue-700 text-lg"
               >
                 Começar Teste Grátis
