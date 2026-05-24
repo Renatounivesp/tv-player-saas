@@ -68,7 +68,11 @@ export default function RegisterPage() {
       
     } catch (err: any) {
       console.error(err);
-      setError(err.message === 'User already registered' ? 'Este e-mail já está em uso.' : err.message);
+      if (err.message?.includes('clinics_slug_key')) {
+        setError('Este nome de clínica já está em uso. Por favor, escolha outro nome.');
+      } else {
+        setError(err.message === 'User already registered' ? 'Este e-mail já está em uso.' : err.message);
+      }
     } finally {
       setIsLoading(false);
     }
