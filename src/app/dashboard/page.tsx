@@ -8,7 +8,7 @@ import { SlideType } from '@/lib/mock-data';
 import { Modal } from '@/components/ui/Modal';
 
 export default function DashboardPage() {
-  const { clinics, slides, addSlide, deleteSlide, toggleSlideStatus } = useAppStore();
+  const { clinics, slides, addSlideAsync, deleteSlideAsync, toggleSlideStatusAsync } = useAppStore();
   const clinic = clinics[0]; // Simula clínica logada
   
   const clinicSlides = slides
@@ -36,7 +36,7 @@ export default function DashboardPage() {
     }
   };
 
-  const handleCreateSlide = () => {
+  const handleCreateSlide = async () => {
     if (!newSlideContent) {
       alert('Por favor, informe o conteúdo do slide (faça o upload da imagem ou digite o texto).');
       return;
@@ -44,29 +44,30 @@ export default function DashboardPage() {
 
     setIsSaving(true);
 
-    // Simulando um pequeno delay de rede para a experiência de UX
-    setTimeout(() => {
-      try {
-        addSlide({
-          clinic_id: clinic.id,
-          type: newSlideType,
-          content_url: newSlideType === 'image' || newSlideType === 'video' ? newSlideContent : undefined,
-          text_content: newSlideType === 'text' || newSlideType === 'promo' ? newSlideContent : undefined,
-          duration_seconds: newSlideDuration,
-          order_index: clinicSlides.length,
-          is_active: true,
-        });
+    try {
+      await addSlideAsync({
+        clinic_id: clinic.id,
+        type: newSlideType,
+        content_url: newSlideType === 'image' || newSlideType === 'video' ? newSlideContent : undefined,
+        text_content: newSlideType === 'text' || newSlideType === 'promo' ? newSlideContent : undefined,
+        duration_seconds: newSlideDuration,
+        order_index: clinicSlides.length,
+        is_active: true,
+      });
 
-        setIsModalOpen(false);
-        setNewSlideContent('');
-        setNewSlideDuration(10);
-      } catch (error) {
-        console.error(error);
-        alert('Erro ao salvar: O arquivo de imagem é muito grande para a memória temporária (LocalStorage). Por favor, escolha uma imagem com tamanho menor que 2MB durante essa fase de testes.');
-      } finally {
-        setIsSaving(false);
+      setIsModalOpen(false);
+      setNewSlideContent('');
+      setNewSlideDuration(10);
+    } catch (error: any) {
+      console.error(error);
+      if (error?.message?.includes('payload too large') || error?.code === '413') {
+        alert('Erro ao salvar: O arquivo de imagem é muito grande. Escolha uma imagem menor.');
+      } else {
+        alert('Erro ao salvar no banco de dados. Tente novamente.');
       }
-    }, 600);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -154,15 +155,16 @@ export default function DashboardPage() {
                 
                 <div className="flex items-center gap-3">
                   <button 
-                    onClick={() => toggleSlideStatus(slide.id)}
+                    onClick={() => toggleSlideStatusAsync(slide.id)}
                     className="text-gray-400 hover:text-gray-900 text-sm font-medium px-2 py-1 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
                   >
                     {slide.is_active ? 'Desativar' : 'Ativar'}
                   </button>
                   <button 
-                    onClick={() => {
+                    onClick={async () => {
                       if (confirm('Tem certeza que deseja excluir este slide?')) {
-                        deleteSlide(slide.id);
+                        try { await deleteSlideAsync(slide.id); } 
+                        catch (e) { alert('Erro ao excluir'); }
                       }
                     }}
                     className="text-gray-400 hover:text-red-600 p-1 transition-colors"

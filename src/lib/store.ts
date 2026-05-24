@@ -1,76 +1,97 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { Clinic, Slide, Plan, MOCK_CLINICS, MOCK_SLIDES, MOCK_PLANS, ClinicStatus } from './mock-data';
+import { Clinic, Slide, Plan, ClinicStatus } from './mock-data';
+import { supabase } from './supabase';
 
 interface AppState {
   clinics: Clinic[];
   slides: Slide[];
   plans: Plan[];
   
+  // Data Loading
+  isLoading: boolean;
+  fetchInitialData: () => Promise<void>;
+  
   // Actions Clinics
-  addClinic: (clinic: Omit<Clinic, 'id' | 'created_at'>) => void;
-  updateClinicStatus: (clinicId: string, status: ClinicStatus) => void;
+  addClinicAsync: (clinic: Omit<Clinic, 'id' | 'created_at'>) => Promise<void>;
+  updateClinicStatusAsync: (clinicId: string, status: ClinicStatus) => Promise<void>;
   
   // Actions Slides
-  addSlide: (slide: Omit<Slide, 'id' | 'created_at'>) => void;
-  deleteSlide: (slideId: string) => void;
-  toggleSlideStatus: (slideId: string) => void;
+  addSlideAsync: (slide: Omit<Slide, 'id' | 'created_at'>) => Promise<void>;
+  deleteSlideAsync: (slideId: string) => Promise<void>;
+  toggleSlideStatusAsync: (slideId: string) => Promise<void>;
 }
 
-export const useAppStore = create<AppState>()(
-  persist(
-    (set, get) => ({
-      clinics: MOCK_CLINICS,
-      slides: MOCK_SLIDES,
-      plans: MOCK_PLANS,
-      
-      addClinic: (clinicData) => {
-        set((state) => ({
-          clinics: [
-            ...state.clinics, 
-            { 
-              ...clinicData, 
-              id: `c${Date.now()}`, 
-              created_at: new Date().toISOString() 
-            }
-          ]
-        }));
-      },
-      
-      updateClinicStatus: (clinicId, status) => {
-        set((state) => ({
-          clinics: state.clinics.map(c => c.id === clinicId ? { ...c, status } : c)
-        }));
-      },
+export const useAppStore = create<AppState>()((set, get) => ({
+  clinics: [],
+  slides: [],
+  plans: [],
+  isLoading: true,
+  
+  fetchInitialData: async () => {
+    set({ isLoading: true });
+    try {
+      const [clinicsRes, slidesRes, plansRes] = await Promise.all([
+        supabase.from('clinics').select('*'),
+        supabase.from('slides').select('*').order('order_index', { ascending: true }),
+        supabase.from('plans').select('*')
+      ]);
 
-      addSlide: (slideData) => {
-        set((state) => ({
-          slides: [
-            ...state.slides, 
-            { 
-              ...slideData, 
-              id: `s${Date.now()}`, 
-              created_at: new Date().toISOString() 
-            }
-          ]
-        }));
-      },
-      
-      deleteSlide: (slideId) => {
-        set((state) => ({
-          slides: state.slides.filter(s => s.id !== slideId)
-        }));
-      },
+      if (clinicsRes.error) throw clinicsRes.error;
+      if (slidesRes.error) throw slidesRes.error;
+      if (plansRes.error) throw plansRes.error;
 
-      toggleSlideStatus: (slideId) => {
-        set((state) => ({
-          slides: state.slides.map(s => s.id === slideId ? { ...s, is_active: !s.is_active } : s)
-        }));
-      }
-    }),
-    {
-      name: 'tv-player-storage', // Chave onde será salvo no LocalStorage
-      partialize: (state) => ({ clinics: state.clinics, slides: state.slides }), // Não salva planos no cache para forçar a atualização
+      set({
+        clinics: clinicsRes.data as Clinic[],
+        slides: slidesRes.data as Slide[],
+        plans: plansRes.data as Plan[],
+        isLoading: false
+      });
+    } catch (error) {
+      console.error('Erro ao buscar dados do Supabase:', error);
+      set({ isLoading: false });
     }
-  )
-);
+  },
+  
+  addClinicAsync: async (clinicData) => {
+    const { data, error } = await supabase.from('clinics').insert([clinicData]).select().single();
+    if (error) throw error;
+    set((state) => ({ clinics: [...state.clinics, data as Clinic] }));
+  },
+  
+  updateClinicStatusAsync: async (clinicId, status) => {
+    const { data, error } = await supabase.from('clinics').update({ status }).eq('id', clinicId).select().single();
+    if (error) throw error;
+    set((state) => ({
+      clinics: state.clinics.map(c => c.id === clinicId ? (data as Clinic) : c)
+    }));
+  },
+
+  addSlideAsync: async (slideData) => {
+    const { data, error } = await supabase.from('slides').insert([slideData]).select().single();
+    if (error) throw error;
+    set((state) => ({ slides: [...state.slides, data as Slide] }));
+  },
+  
+  deleteSlideAsync: async (slideId) => {
+    const { error } = await supabase.from('slides').delete().eq('id', slideId);
+    if (error) throw error;
+    set((state) => ({ slides: state.slides.filter(s => s.id !== slideId) }));
+  },
+
+  toggleSlideStatusAsync: async (slideId) => {
+    const slide = get().slides.find(s => s.id === slideId);
+    if (!slide) return;
+    
+    const { data, error } = await supabase
+      .from('slides')
+      .update({ is_active: !slide.is_active })
+      .eq('id', slideId)
+      .select()
+      .single();
+      
+    if (error) throw error;
+    set((state) => ({
+      slides: state.slides.map(s => s.id === slideId ? (data as Slide) : s)
+    }));
+  }
+}));

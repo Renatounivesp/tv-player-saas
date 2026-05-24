@@ -1,11 +1,26 @@
+'use client';
+
+import { useEffect } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, Users, CreditCard, Settings, LogOut } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { Users, LayoutDashboard, Settings, CreditCard, LogOut } from 'lucide-react';
+import { useAppStore } from '@/lib/store';
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { isLoading, fetchInitialData } = useAppStore();
+
+  useEffect(() => {
+    fetchInitialData();
+  }, [fetchInitialData]);
+
+  if (isLoading) {
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Carregando Admin...</div>;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}

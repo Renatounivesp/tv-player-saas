@@ -1,14 +1,26 @@
+'use client';
+
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { LayoutDashboard, MonitorPlay, Image as ImageIcon, Settings, LogOut } from 'lucide-react';
-import { MOCK_CLINICS } from '@/lib/mock-data';
+import { useAppStore } from '@/lib/store';
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Simula a clínica logada
-  const clinic = MOCK_CLINICS[0];
+  const { clinics, isLoading, fetchInitialData } = useAppStore();
+
+  useEffect(() => {
+    fetchInitialData();
+  }, [fetchInitialData]);
+
+  if (isLoading || clinics.length === 0) {
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Carregando...</div>;
+  }
+
+  const clinic = clinics[0];
 
   return (
     <div className="min-h-screen bg-gray-50 flex">

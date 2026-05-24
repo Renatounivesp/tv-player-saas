@@ -1,36 +1,48 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useAppStore } from '@/lib/store';
+import { useEffect } from 'react';
 import PlayerClient from './PlayerClient';
+import { useAppStore } from '@/lib/store';
+import { supabase } from '@/lib/supabase';
 
 export default function TvPlayerWrapper({ slug }: { slug: string }) {
-  const { clinics, slides } = useAppStore();
-  const [mounted, setMounted] = useState(false);
+  const { clinics, slides, isLoading, fetchInitialData } = useAppStore();
+
+  const clinic = clinics.find(c => c.slug === slug);
+  const clinicId = clinic?.id;
 
   useEffect(() => {
-    setMounted(true);
-    // Escuta mudanças de memória no disco (LocalStorage) vindas de outras abas
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'tv-player-storage' && e.newValue) {
-        try {
-          const parsed = JSON.parse(e.newValue);
-          if (parsed.state) {
-            useAppStore.setState(parsed.state);
-          }
-        } catch (err) {
-          console.error("Erro ao sincronizar abas:", err);
+    // 1. Busca os dados iniciais assim que a TV liga
+    fetchInitialData();
+
+    if (!clinicId) return;
+
+    // 2. Conecta no Supabase via WebSockets para ouvir mudanças em Tempo Real
+    const channel = supabase
+      .channel('tv-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'slides', filter: `clinic_id=eq.${clinicId}` },
+        (payload) => {
+          console.log('Mudança detectada no banco de dados! Atualizando TV...', payload);
+          // Recarrega os dados para pegar o novo slide ou status
+          fetchInitialData();
         }
-      }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
     };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+  }, [clinicId, fetchInitialData]);
 
-  if (!mounted) return null; // Evita erros de hidratação do Next.js
-
-  
-  const clinic = clinics.find(c => c.slug === slug);
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white text-2xl font-bold animate-pulse">Sincronizando com a Nuvem...</div>
+      </div>
+    );
+  }
 
   if (!clinic) {
     return (
