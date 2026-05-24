@@ -23,8 +23,31 @@ export default function DashboardLayout({
     fetchInitialData();
   }, [fetchInitialData]);
 
-  if (isLoading || clinics.length === 0) {
+  if (isLoading) {
     return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Carregando...</div>;
+  }
+
+  if (clinics.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 text-center">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Bem-vindo(a)!</h2>
+        <p className="text-gray-600 mb-6 max-w-md">Não encontramos nenhuma clínica vinculada à sua conta. Se você acabou de se cadastrar, aguarde alguns instantes e recarregue a página.</p>
+        <div className="flex gap-4">
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+          >
+            Recarregar
+          </button>
+          <button 
+            onClick={handleLogout}
+            className="px-4 py-2 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-lg font-medium transition-colors"
+          >
+            Sair
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const clinic = clinics[0];
@@ -72,7 +95,7 @@ export default function DashboardLayout({
               <span className="text-sm font-medium text-gray-900">Ativa</span>
             </div>
           </div>
-          <button className="flex items-center w-full px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100">
+          <button onClick={handleLogout} className="flex items-center w-full px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100 transition-colors">
             <LogOut className="w-5 h-5 mr-3 text-gray-400" />
             Sair
           </button>

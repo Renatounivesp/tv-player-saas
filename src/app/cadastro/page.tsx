@@ -58,9 +58,12 @@ export default function RegisterPage() {
       // Sucesso!
       setIsSuccess(true);
       
-      // Se o Supabase logar automaticamente (Confirm Email disabled):
+      // Se o Supabase logar automaticamente:
       if (authData.session) {
-        setTimeout(() => router.push('/dashboard'), 2000);
+        setTimeout(() => {
+          router.push('/dashboard');
+          router.refresh();
+        }, 2000);
       }
       
     } catch (err: any) {
@@ -84,10 +87,15 @@ export default function RegisterPage() {
           <p className="text-gray-600 mb-6">
             A clínica <strong>{clinicName}</strong> foi cadastrada com sucesso.
           </p>
-          <p className="text-sm text-gray-500">Redirecionando para o painel...</p>
-          <div className="mt-6">
-            <Link href="/dashboard" className="text-blue-600 font-medium hover:underline">
-              Ir para o Painel Agora
+          <div className="bg-blue-50 text-blue-800 p-4 rounded-lg text-sm mb-6 text-left">
+            <strong>Atenção:</strong> Se você ativou a confirmação de e-mail no Supabase, por favor verifique sua caixa de entrada para ativar a conta antes de entrar.
+          </div>
+          <div className="mt-6 flex flex-col gap-3">
+            <Link href="/dashboard" className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+              Ir para o Painel
+            </Link>
+            <Link href="/login" className="w-full flex justify-center py-2.5 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+              Fazer Login
             </Link>
           </div>
         </div>

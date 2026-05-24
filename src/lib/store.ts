@@ -51,7 +51,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
 
       // Pegar os slides de todas as clínicas do usuário (normalmente é só 1 clínica)
       const clinicIds = clinicsRes.data ? clinicsRes.data.map(c => c.id) : [];
-      let slidesRes = { data: [], error: null as any };
+      let slidesRes: any = { data: [], error: null };
       
       if (clinicIds.length > 0) {
         slidesRes = await supabase.from('slides').select('*').in('clinic_id', clinicIds).order('order_index', { ascending: true });
