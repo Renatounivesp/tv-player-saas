@@ -25,8 +25,8 @@ export default function AdminDashboard() {
     manager_name: '',
     phone: '',
     email: '',
-    plan_id: 'p1',
-    subscription_value: 29
+    plan_id: 'p_unico',
+    subscription_value: 49
   });
 
   // Edit Status Modal State
@@ -36,17 +36,23 @@ export default function AdminDashboard() {
   const handleCreateClinic = async () => {
     if (!newClinic.name || !newClinic.slug) return alert('Nome e Slug são obrigatórios.');
     
-    await addClinicAsync({
-      ...newClinic,
-      primary_color: '#000000',
-      status: 'active',
-      subscription_due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // +30 days
-    });
-    
-    setIsNewClinicOpen(false);
-    setNewClinic({
-      name: '', slug: '', manager_name: '', phone: '', email: '', plan_id: 'p1', subscription_value: 29
-    });
+    try {
+      await addClinicAsync({
+        ...newClinic,
+        primary_color: '#000000',
+        status: 'active',
+        subscription_due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // +30 days
+      });
+      
+      setIsNewClinicOpen(false);
+      setNewClinic({
+        name: '', slug: '', manager_name: '', phone: '', email: '', plan_id: 'p_unico', subscription_value: 49
+      });
+      alert('Clínica adicionada com sucesso!');
+    } catch (error: any) {
+      console.error(error);
+      alert('Erro ao salvar a clínica: ' + (error.message || 'Verifique o console para mais detalhes.'));
+    }
   };
 
   const handleUpdateStatus = async () => {
