@@ -25,6 +25,14 @@ export default function RegisterPage() {
     setError(null);
 
     try {
+      const slug = clinicName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      
+      // 0. Verificar se o slug já existe antes de criar o usuário
+      const { data: existingClinic } = await supabase.from('clinics').select('id').eq('slug', slug).maybeSingle();
+      if (existingClinic) {
+        throw new Error('SLUG_EXISTS');
+      }
+
       // 1. Criar o Usuário na Autenticação
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
@@ -38,8 +46,6 @@ export default function RegisterPage() {
       }
 
       // 2. Criar a Clínica atrelada a este usuário
-      const slug = clinicName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      
       const { error: clinicError } = await supabase.from('clinics').insert([
         {
           name: clinicName,
@@ -53,7 +59,11 @@ export default function RegisterPage() {
         }
       ]);
 
-      if (clinicError) throw clinicError;
+      if (clinicError) {
+        // Se falhar aqui, o usuário foi criado no Auth mas não na tabela clinics
+        console.error('Erro ao criar clínica:', clinicError);
+        throw new Error('CLINIC_INSERT_FAILED');
+      }
 
       // Sucesso!
       setIsSuccess(true);
@@ -68,10 +78,14 @@ export default function RegisterPage() {
       
     } catch (err: any) {
       console.error(err);
-      if (err.message?.includes('clinics_slug_key')) {
-        setError('Este nome de clínica já está em uso. Por favor, escolha outro nome.');
+      if (err.message === 'SLUG_EXISTS' || err.message?.includes('clinics_slug_key')) {
+        setError('Este nome de clínica já está em uso. Por favor, adicione um diferencial (ex: Clínica Sorriso SP).');
+      } else if (err.message === 'User already registered' || err.message?.includes('already registered')) {
+        setError('Este e-mail já está cadastrado no sistema. Tente fazer login ou use outro e-mail.');
+      } else if (err.message === 'CLINIC_INSERT_FAILED') {
+        setError('A conta foi criada, mas houve um erro ao registrar a clínica. Entre em contato com o suporte.');
       } else {
-        setError(err.message === 'User already registered' ? 'Este e-mail já está em uso.' : err.message);
+        setError(err.message || 'Ocorreu um erro desconhecido.');
       }
     } finally {
       setIsLoading(false);
