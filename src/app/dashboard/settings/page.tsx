@@ -13,6 +13,8 @@ export default function SettingsPage() {
   const [logoUrl, setLogoUrl] = useState('');
   const [frameStyle, setFrameStyle] = useState<FrameStyle>('none');
   const [showWeather, setShowWeather] = useState(false);
+  const [showClock, setShowClock] = useState(true);
+  const [showLogo, setShowLogo] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -21,6 +23,8 @@ export default function SettingsPage() {
       setLogoUrl(clinic.logo_url || '');
       setFrameStyle(clinic.frame_style || 'none');
       setShowWeather(clinic.show_weather || false);
+      setShowClock(clinic.show_clock !== false); // default to true
+      setShowLogo(clinic.show_logo !== false); // default to true
     }
   }, [clinic]);
 
@@ -32,7 +36,9 @@ export default function SettingsPage() {
         primary_color: primaryColor,
         logo_url: logoUrl,
         frame_style: frameStyle,
-        show_weather: showWeather
+        show_weather: showWeather,
+        show_clock: showClock,
+        show_logo: showLogo
       });
       alert('Configurações salvas com sucesso!');
     } catch (error) {
@@ -116,7 +122,36 @@ export default function SettingsPage() {
             </p>
           </div>
 
-          <div className="pt-4 border-t border-gray-100">
+          <div className="pt-4 border-t border-gray-100 space-y-6">
+            {/* Logo Toggle */}
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="block text-sm font-medium text-gray-900">Mostrar Logotipo / Nome</label>
+                <p className="text-sm text-gray-500 mt-1">Exibe o nome ou a logo da clínica no canto superior da TV.</p>
+              </div>
+              <button 
+                onClick={() => setShowLogo(!showLogo)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${showLogo ? 'bg-blue-600' : 'bg-gray-200'}`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showLogo ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+            </div>
+
+            {/* Clock Toggle */}
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="block text-sm font-medium text-gray-900">Mostrar Relógio e Data</label>
+                <p className="text-sm text-gray-500 mt-1">Exibe o horário atual e a data na tela da TV.</p>
+              </div>
+              <button 
+                onClick={() => setShowClock(!showClock)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${showClock ? 'bg-blue-600' : 'bg-gray-200'}`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showClock ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+            </div>
+
+            {/* Weather Toggle */}
             <div className="flex items-center justify-between">
               <div>
                 <label className="block text-sm font-medium text-gray-900">Previsão do Tempo</label>

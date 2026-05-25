@@ -21,6 +21,8 @@ export interface Clinic {
   primary_color: string;
   frame_style?: FrameStyle;
   show_weather?: boolean;
+  show_clock?: boolean;
+  show_logo?: boolean;
   status: ClinicStatus;
   plan_id: string;
   subscription_due_date: string;

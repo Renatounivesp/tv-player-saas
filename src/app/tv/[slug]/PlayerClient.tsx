@@ -158,29 +158,33 @@ export default function PlayerClient({ clinic, slides }: PlayerClientProps) {
 
       {/* Floating Info (Logo and Clock) */}
       <div className="absolute top-0 left-0 w-full p-4 md:p-8 flex justify-between items-start z-50 pointer-events-none drop-shadow-lg">
-        {clinic.logo_url ? (
-          <img 
-            src={clinic.logo_url} 
-            alt={clinic.name} 
-            className="h-10 md:h-16 lg:h-24 object-contain bg-white/10 backdrop-blur-md p-2 rounded-xl"
-          />
-        ) : (
-          <div 
-            className="text-white font-black text-lg md:text-2xl lg:text-3xl tracking-tight bg-black/30 backdrop-blur-md px-4 md:px-6 py-2 md:py-3 rounded-xl border border-white/10"
-          >
-            {clinic.name}
-          </div>
+        {clinic.show_logo !== false && (
+          clinic.logo_url ? (
+            <img 
+              src={clinic.logo_url} 
+              alt={clinic.name} 
+              className="h-10 md:h-16 lg:h-24 object-contain bg-white/10 backdrop-blur-md p-2 rounded-xl"
+            />
+          ) : (
+            <div 
+              className="text-white font-black text-lg md:text-2xl lg:text-3xl tracking-tight bg-black/30 backdrop-blur-md px-4 md:px-6 py-2 md:py-3 rounded-xl border border-white/10"
+            >
+              {clinic.name}
+            </div>
+          )
         )}
 
-        <div className="flex flex-col items-end gap-3">
-          <div className="bg-black/40 backdrop-blur-md px-4 md:px-6 py-2 md:py-3 rounded-xl border border-white/10 text-white text-right">
-            <div className="text-xl md:text-2xl lg:text-3xl font-bold tracking-wider">
-              {currentTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+        <div className="flex flex-col items-end gap-3 ml-auto">
+          {clinic.show_clock !== false && (
+            <div className="bg-black/40 backdrop-blur-md px-4 md:px-6 py-2 md:py-3 rounded-xl border border-white/10 text-white text-right">
+              <div className="text-xl md:text-2xl lg:text-3xl font-bold tracking-wider">
+                {currentTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+              </div>
+              <div className="text-xs md:text-sm font-medium text-white/80">
+                {currentTime.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
+              </div>
             </div>
-            <div className="text-xs md:text-sm font-medium text-white/80">
-              {currentTime.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
-            </div>
-          </div>
+          )}
 
           {clinic.show_weather && weather && (
             <div className="bg-black/40 backdrop-blur-md px-4 md:px-6 py-2 md:py-3 rounded-xl border border-white/10 text-white flex items-center gap-3">
