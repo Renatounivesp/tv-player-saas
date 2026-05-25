@@ -20,6 +20,7 @@ export interface Clinic {
   logo_url?: string;
   primary_color: string;
   frame_style?: FrameStyle;
+  show_weather?: boolean;
   status: ClinicStatus;
   plan_id: string;
   subscription_due_date: string;

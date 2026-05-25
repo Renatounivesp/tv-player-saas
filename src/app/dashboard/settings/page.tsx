@@ -12,6 +12,7 @@ export default function SettingsPage() {
   const [primaryColor, setPrimaryColor] = useState('#0ea5e9');
   const [logoUrl, setLogoUrl] = useState('');
   const [frameStyle, setFrameStyle] = useState<FrameStyle>('none');
+  const [showWeather, setShowWeather] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -19,6 +20,7 @@ export default function SettingsPage() {
       setPrimaryColor(clinic.primary_color || '#0ea5e9');
       setLogoUrl(clinic.logo_url || '');
       setFrameStyle(clinic.frame_style || 'none');
+      setShowWeather(clinic.show_weather || false);
     }
   }, [clinic]);
 
@@ -29,7 +31,8 @@ export default function SettingsPage() {
       await updateClinicSettingsAsync(clinic.id, {
         primary_color: primaryColor,
         logo_url: logoUrl,
-        frame_style: frameStyle
+        frame_style: frameStyle,
+        show_weather: showWeather
       });
       alert('Configurações salvas com sucesso!');
     } catch (error) {
@@ -111,6 +114,21 @@ export default function SettingsPage() {
             <p className="text-sm text-gray-500">
               * A transição agora é configurada individualmente na aba "Meus Slides".
             </p>
+          </div>
+
+          <div className="pt-4 border-t border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="block text-sm font-medium text-gray-900">Previsão do Tempo</label>
+                <p className="text-sm text-gray-500 mt-1">Mostra a temperatura da sua cidade automaticamente no canto da TV.</p>
+              </div>
+              <button 
+                onClick={() => setShowWeather(!showWeather)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${showWeather ? 'bg-blue-600' : 'bg-gray-200'}`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showWeather ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+            </div>
           </div>
 
           <div>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Clinic, Slide } from '@/lib/mock-data';
 import { AnimatePresence, motion, Variants } from 'framer-motion';
+import { Cloud, Sun, CloudRain, CloudLightning, Snowflake } from 'lucide-react';
 
 const transitionVariants: Record<string, Variants> = {
   fade: {
@@ -40,6 +41,9 @@ interface PlayerClientProps {
 export default function PlayerClient({ clinic, slides }: PlayerClientProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
+  
+  // Weather state
+  const [weather, setWeather] = useState<{ temp: number, code: number } | null>(null);
 
   // Clock
   useEffect(() => {
@@ -60,7 +64,46 @@ export default function PlayerClient({ clinic, slides }: PlayerClientProps) {
     return () => clearTimeout(timer);
   }, [currentIndex, slides]);
 
+  // Weather Engine
+  useEffect(() => {
+    if (!clinic.show_weather) return;
+
+    const fetchWeather = async () => {
+      try {
+        // 1. Get Lat/Lng from IP
+        const geoRes = await fetch('https://get.geojs.io/v1/ip/geo.json');
+        const geoData = await geoRes.json();
+        const { latitude, longitude } = geoData;
+
+        // 2. Get Weather
+        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
+        const weatherData = await weatherRes.json();
+        
+        setWeather({
+          temp: Math.round(weatherData.current_weather.temperature),
+          code: weatherData.current_weather.weathercode
+        });
+      } catch (error) {
+        console.error('Failed to fetch weather', error);
+      }
+    };
+
+    fetchWeather();
+    // Update every 30 minutes
+    const timer = setInterval(fetchWeather, 30 * 60 * 1000);
+    return () => clearInterval(timer);
+  }, [clinic.show_weather]);
+
   const slide = slides[currentIndex];
+
+  const getWeatherIcon = (code: number) => {
+    if (code === 0) return <Sun className="w-6 h-6 md:w-8 md:h-8 text-yellow-400" />;
+    if (code >= 1 && code <= 48) return <Cloud className="w-6 h-6 md:w-8 md:h-8 text-gray-300" />;
+    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return <CloudRain className="w-6 h-6 md:w-8 md:h-8 text-blue-400" />;
+    if (code >= 71 && code <= 77) return <Snowflake className="w-6 h-6 md:w-8 md:h-8 text-white" />;
+    if (code >= 95 && code <= 99) return <CloudLightning className="w-6 h-6 md:w-8 md:h-8 text-yellow-500" />;
+    return <Sun className="w-6 h-6 md:w-8 md:h-8 text-yellow-400" />;
+  };
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-black">
@@ -129,13 +172,24 @@ export default function PlayerClient({ clinic, slides }: PlayerClientProps) {
           </div>
         )}
 
-        <div className="bg-black/40 backdrop-blur-md px-4 md:px-6 py-2 md:py-3 rounded-xl border border-white/10 text-white text-right">
-          <div className="text-xl md:text-2xl lg:text-3xl font-bold tracking-wider">
-            {currentTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+        <div className="flex flex-col items-end gap-3">
+          <div className="bg-black/40 backdrop-blur-md px-4 md:px-6 py-2 md:py-3 rounded-xl border border-white/10 text-white text-right">
+            <div className="text-xl md:text-2xl lg:text-3xl font-bold tracking-wider">
+              {currentTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+            </div>
+            <div className="text-xs md:text-sm font-medium text-white/80">
+              {currentTime.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
+            </div>
           </div>
-          <div className="text-xs md:text-sm font-medium text-white/80">
-            {currentTime.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
-          </div>
+
+          {clinic.show_weather && weather && (
+            <div className="bg-black/40 backdrop-blur-md px-4 md:px-6 py-2 md:py-3 rounded-xl border border-white/10 text-white flex items-center gap-3">
+              {getWeatherIcon(weather.code)}
+              <div className="text-xl md:text-2xl lg:text-3xl font-bold">
+                {weather.temp}°C
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
