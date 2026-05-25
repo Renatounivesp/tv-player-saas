@@ -138,6 +138,24 @@ export default function PlayerClient({ clinic, slides }: PlayerClientProps) {
           </div>
         </div>
       </div>
+
+      {/* Frame Overlay */}
+      {clinic.frame_style && clinic.frame_style !== 'none' && (
+        <div 
+          className={`absolute inset-0 z-50 pointer-events-none transition-all duration-1000 ${
+            clinic.frame_style === 'solid' ? 'border-[16px] md:border-[32px]' :
+            clinic.frame_style === 'minimal' ? 'border-[16px] md:border-[32px] rounded-[2rem] md:rounded-[4rem] m-2 md:m-6' :
+            clinic.frame_style === 'neon' ? 'border-[8px] md:border-[16px]' :
+            clinic.frame_style === 'gradient' ? 'border-[16px] md:border-[32px]' : ''
+          }`}
+          style={{
+            borderColor: clinic.frame_style === 'gradient' ? 'transparent' : clinic.primary_color,
+            boxShadow: clinic.frame_style === 'neon' ? `inset 0 0 60px ${clinic.primary_color}, 0 0 60px ${clinic.primary_color}` : 
+                       clinic.frame_style === 'minimal' ? `0 0 0 9999px black` : 'none',
+            borderImage: clinic.frame_style === 'gradient' ? `linear-gradient(135deg, ${clinic.primary_color} 0%, #000000 100%) 1` : 'none'
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,44 @@
-import { Palette, Link as LinkIcon, Monitor } from 'lucide-react';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Palette, Link as LinkIcon, Monitor, Save } from 'lucide-react';
+import { useAppStore } from '@/lib/store';
+import { FrameStyle } from '@/lib/mock-data';
 
 export default function SettingsPage() {
+  const { clinics, updateClinicSettingsAsync } = useAppStore();
+  const clinic = clinics[0];
+
+  const [primaryColor, setPrimaryColor] = useState('#0ea5e9');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [frameStyle, setFrameStyle] = useState<FrameStyle>('none');
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (clinic) {
+      setPrimaryColor(clinic.primary_color || '#0ea5e9');
+      setLogoUrl(clinic.logo_url || '');
+      setFrameStyle(clinic.frame_style || 'none');
+    }
+  }, [clinic]);
+
+  const handleSave = async () => {
+    if (!clinic) return;
+    setIsSaving(true);
+    try {
+      await updateClinicSettingsAsync(clinic.id, {
+        primary_color: primaryColor,
+        logo_url: logoUrl,
+        frame_style: frameStyle
+      });
+      alert('Configurações salvas com sucesso!');
+    } catch (error) {
+      console.error(error);
+      alert('Erro ao salvar as configurações.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -8,8 +46,13 @@ export default function SettingsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Configurações da Clínica</h1>
           <p className="text-gray-500 mt-1">Personalize a identidade visual da sua TV.</p>
         </div>
-        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
-          Salvar Alterações
+        <button 
+          onClick={handleSave}
+          disabled={isSaving}
+          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+        >
+          <Save className="w-4 h-4 mr-2" />
+          {isSaving ? 'Salvando...' : 'Salvar Alterações'}
         </button>
       </div>
 
@@ -24,7 +67,8 @@ export default function SettingsPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Cor Principal (Hexadecimal)</label>
             <input 
               type="color" 
-              defaultValue="#0ea5e9"
+              value={primaryColor}
+              onChange={(e) => setPrimaryColor(e.target.value)}
               className="w-full h-10 px-1 py-1 border border-gray-300 rounded-lg cursor-pointer"
             />
           </div>
@@ -33,6 +77,8 @@ export default function SettingsPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Logotipo (URL ou Upload)</label>
             <input 
               type="text" 
+              value={logoUrl}
+              onChange={(e) => setLogoUrl(e.target.value)}
               placeholder="https://exemplo.com/logo.png"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -46,12 +92,25 @@ export default function SettingsPage() {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Transição dos Slides</label>
-            <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option>Suave (Fade)</option>
-              <option>Nenhuma (Seca)</option>
-              <option>Deslizar (Slide)</option>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Estilo da Moldura da TV</label>
+            <select 
+              value={frameStyle}
+              onChange={(e) => setFrameStyle(e.target.value as FrameStyle)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="none">Nenhuma (Tela Cheia)</option>
+              <option value="solid">Sólida (Borda Simples)</option>
+              <option value="minimal">Arredondada (Estilo Tablet)</option>
+              <option value="neon">Neon (Brilho LED)</option>
+              <option value="gradient">Gradiente (Degradê Moderno)</option>
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Transição Padrão</label>
+            <p className="text-sm text-gray-500">
+              * A transição agora é configurada individualmente na aba "Meus Slides".
+            </p>
           </div>
 
           <div>
@@ -60,10 +119,18 @@ export default function SettingsPage() {
               <input 
                 type="text" 
                 readOnly
-                value="https://tvplayer.com/tv/clinica-sorriso"
+                value={typeof window !== 'undefined' && clinic ? `${window.location.origin}/tv/${clinic.slug}` : ''}
                 className="w-full px-3 py-2 border border-gray-200 bg-gray-50 rounded-lg text-gray-500"
               />
-              <button className="p-2 border border-gray-300 rounded-lg text-gray-500 hover:bg-gray-100">
+              <button 
+                onClick={() => {
+                  if (clinic) {
+                    navigator.clipboard.writeText(`${window.location.origin}/tv/${clinic.slug}`);
+                    alert('Link copiado!');
+                  }
+                }}
+                className="p-2 border border-gray-300 rounded-lg text-gray-500 hover:bg-gray-100"
+              >
                 <LinkIcon className="w-5 h-5" />
               </button>
             </div>

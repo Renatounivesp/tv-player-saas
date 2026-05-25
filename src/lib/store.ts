@@ -15,6 +15,7 @@ interface AppState {
   // Actions Clinics
   addClinicAsync: (clinic: Omit<Clinic, 'id' | 'created_at'>) => Promise<void>;
   updateClinicStatusAsync: (clinicId: string, status: ClinicStatus) => Promise<void>;
+  updateClinicSettingsAsync: (clinicId: string, updates: Partial<Clinic>) => Promise<void>;
   
   // Actions Slides
   addSlideAsync: (slide: Omit<Slide, 'id' | 'created_at'>) => Promise<void>;
@@ -103,6 +104,15 @@ export const useAppStore = create<AppState>()((set, get) => ({
   updateClinicStatusAsync: async (clinicId, status) => {
     const supabase = createClient();
     const { data, error } = await supabase.from('clinics').update({ status }).eq('id', clinicId).select().single();
+    if (error) throw error;
+    set((state) => ({
+      clinics: state.clinics.map(c => c.id === clinicId ? (data as Clinic) : c)
+    }));
+  },
+
+  updateClinicSettingsAsync: async (clinicId, updates) => {
+    const supabase = createClient();
+    const { data, error } = await supabase.from('clinics').update(updates).eq('id', clinicId).select().single();
     if (error) throw error;
     set((state) => ({
       clinics: state.clinics.map(c => c.id === clinicId ? (data as Clinic) : c)

@@ -1,5 +1,6 @@
 export type ClinicStatus = 'active' | 'pending' | 'overdue' | 'blocked' | 'lifetime';
 export type SlideType = 'image' | 'video' | 'text' | 'promo';
+export type FrameStyle = 'none' | 'solid' | 'gradient' | 'neon' | 'minimal';
 
 export interface Plan {
   id: string;
@@ -18,6 +19,7 @@ export interface Clinic {
   email: string;
   logo_url?: string;
   primary_color: string;
+  frame_style?: FrameStyle;
   status: ClinicStatus;
   plan_id: string;
   subscription_due_date: string;
