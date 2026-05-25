@@ -218,15 +218,39 @@ export default function SettingsPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Link do Áudio (MP3)</label>
-              <input 
-                type="text" 
-                value={backgroundMusicUrl}
-                onChange={(e) => setBackgroundMusicUrl(e.target.value)}
-                placeholder="Ex: https://dominio.com/musica.mp3"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <p className="text-xs text-gray-500 mt-1">Deixe em branco para desligar o som.</p>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Música / Estilo</label>
+              <select 
+                value={
+                  ['', 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3', 'https://cdn.pixabay.com/download/audio/2022/11/22/audio_febc508520.mp3', 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3', 'https://cdn.pixabay.com/download/audio/2022/10/25/audio_2ba7ec4eb3.mp3'].includes(backgroundMusicUrl)
+                    ? backgroundMusicUrl 
+                    : 'custom'
+                }
+                onChange={(e) => {
+                  if (e.target.value !== 'custom') {
+                    setBackgroundMusicUrl(e.target.value);
+                  } else {
+                    setBackgroundMusicUrl('https://'); // Placeholder to trigger custom input
+                  }
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
+              >
+                <option value="">🔇 Sem Música (Mudo)</option>
+                <option value="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3">🎷 Jazz Suave (Lofi)</option>
+                <option value="https://cdn.pixabay.com/download/audio/2022/11/22/audio_febc508520.mp3">🎹 Piano Relaxante</option>
+                <option value="https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3">🎸 Brisa Acústica</option>
+                <option value="https://cdn.pixabay.com/download/audio/2022/10/25/audio_2ba7ec4eb3.mp3">🏖️ Bossa Nova Chill</option>
+                <option value="custom">🔗 Personalizado (Colar Link MP3)</option>
+              </select>
+
+              {!['', 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3', 'https://cdn.pixabay.com/download/audio/2022/11/22/audio_febc508520.mp3', 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3', 'https://cdn.pixabay.com/download/audio/2022/10/25/audio_2ba7ec4eb3.mp3'].includes(backgroundMusicUrl) && (
+                <input 
+                  type="text" 
+                  value={backgroundMusicUrl}
+                  onChange={(e) => setBackgroundMusicUrl(e.target.value)}
+                  placeholder="Cole o link do MP3 aqui..."
+                  className="w-full px-3 py-2 border border-blue-300 bg-blue-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              )}
             </div>
 
             <div>
