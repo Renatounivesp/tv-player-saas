@@ -1,14 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, GripVertical, Image as ImageIcon, Type, Clock, Trash2, Play } from 'lucide-react';
+import { Plus, GripVertical, Image as ImageIcon, Type, Clock, Trash2, Play, Edit2 } from 'lucide-react';
 import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
 import { SlideType, SlideTransition } from '@/lib/mock-data';
 import { Modal } from '@/components/ui/Modal';
 
 export default function DashboardPage() {
-  const { clinics, slides, addSlideAsync, deleteSlideAsync, toggleSlideStatusAsync } = useAppStore();
+  const { clinics, slides, addSlideAsync, updateSlideAsync, updateSlidesOrderAsync, deleteSlideAsync, toggleSlideStatusAsync } = useAppStore();
   const clinic = clinics[0]; // Simula clínica logada
   
   const clinicSlides = slides
@@ -23,6 +23,8 @@ export default function DashboardPage() {
   const [newSlideDuration, setNewSlideDuration] = useState(10);
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [editingSlideId, setEditingSlideId] = useState<string | null>(null);
+  const [draggedSlideId, setDraggedSlideId] = useState<string | null>(null);
 
   const compressImage = (file: File): Promise<string> => {
     return new Promise((resolve) => {
@@ -96,32 +98,40 @@ export default function DashboardPage() {
     setIsSaving(true);
 
     try {
-      if (newSlideType === 'image') {
-        // Enviar multiplas imagens
-        const promises = newSlideImages.map((imgBase64, index) => 
-          addSlideAsync({
-            clinic_id: clinic.id,
-            type: 'image',
-            content_url: imgBase64,
-            duration_seconds: newSlideDuration,
-            order_index: clinicSlides.length + index,
-            is_active: true,
-          })
-        );
-        await Promise.all(promises);
-      } else {
-        // Texto ou promo
-        await addSlideAsync({
-          clinic_id: clinic.id,
-          type: newSlideType,
+      if (editingSlideId) {
+        await updateSlideAsync(editingSlideId, {
           text_content: newSlideContent,
-          duration_seconds: newSlideDuration,
-          order_index: clinicSlides.length,
-          is_active: true,
+          duration_seconds: newSlideDuration
         });
+      } else {
+        if (newSlideType === 'image') {
+          // Enviar multiplas imagens
+          const promises = newSlideImages.map((imgBase64, index) => 
+            addSlideAsync({
+              clinic_id: clinic.id,
+              type: 'image',
+              content_url: imgBase64,
+              duration_seconds: newSlideDuration,
+              order_index: clinicSlides.length + index,
+              is_active: true,
+            })
+          );
+          await Promise.all(promises);
+        } else {
+          // Texto ou promo
+          await addSlideAsync({
+            clinic_id: clinic.id,
+            type: newSlideType,
+            text_content: newSlideContent,
+            duration_seconds: newSlideDuration,
+            order_index: clinicSlides.length,
+            is_active: true,
+          });
+        }
       }
 
       setIsModalOpen(false);
+      setEditingSlideId(null);
       setNewSlideContent('');
       setNewSlideImages([]);
       setNewSlideDuration(10);
@@ -135,6 +145,50 @@ export default function DashboardPage() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    setDraggedSlideId(id);
+    e.dataTransfer.effectAllowed = 'move';
+    // Pequeno delay para o visual não sumir na mão
+    setTimeout(() => {
+      const el = document.getElementById(`slide-${id}`);
+      if (el) el.classList.add('opacity-30');
+    }, 0);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    const el = document.getElementById(`slide-${draggedSlideId}`);
+    if (el) el.classList.remove('opacity-30');
+    
+    if (!draggedSlideId || draggedSlideId === targetId) return;
+
+    const newSlides = [...clinicSlides];
+    const draggedIndex = newSlides.findIndex(s => s.id === draggedSlideId);
+    const targetIndex = newSlides.findIndex(s => s.id === targetId);
+    
+    const [draggedItem] = newSlides.splice(draggedIndex, 1);
+    newSlides.splice(targetIndex, 0, draggedItem);
+    
+    // Atualizar order_index local
+    const updatedSlides = newSlides.map((s, idx) => ({ ...s, order_index: idx }));
+    
+    setDraggedSlideId(null);
+    await updateSlidesOrderAsync(updatedSlides);
+  };
+
+  const handleEditClick = (slide: any) => {
+    setEditingSlideId(slide.id);
+    setNewSlideType(slide.type);
+    setNewSlideContent(slide.text_content || '');
+    setNewSlideDuration(slide.duration_seconds);
+    setIsModalOpen(true);
   };
 
   return (
@@ -154,7 +208,14 @@ export default function DashboardPage() {
             Visualizar TV
           </Link>
           <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => {
+              setEditingSlideId(null);
+              setNewSlideType('image');
+              setNewSlideContent('');
+              setNewSlideImages([]);
+              setNewSlideDuration(10);
+              setIsModalOpen(true);
+            }}
             className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -176,8 +237,21 @@ export default function DashboardPage() {
           )}
 
           {clinicSlides.map((slide, index) => (
-            <div key={slide.id} className={`p-4 flex items-center hover:bg-gray-50 group transition-opacity ${!slide.is_active ? 'opacity-50' : ''}`}>
-              <div className="cursor-move text-gray-400 hover:text-gray-600 mr-4">
+            <div 
+              id={`slide-${slide.id}`}
+              key={slide.id} 
+              draggable
+              onDragStart={(e) => handleDragStart(e, slide.id)}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, slide.id)}
+              onDragEnd={() => {
+                const el = document.getElementById(`slide-${slide.id}`);
+                if (el) el.classList.remove('opacity-30');
+                setDraggedSlideId(null);
+              }}
+              className={`p-4 flex items-center bg-white hover:bg-gray-50 transition-all border-l-4 ${!slide.is_active ? 'opacity-60 border-transparent' : 'border-blue-500'}`}
+            >
+              <div className="cursor-grab active:cursor-grabbing text-gray-300 hover:text-blue-500 mr-4 p-2 rounded hover:bg-blue-50 transition-colors">
                 <GripVertical className="w-5 h-5" />
               </div>
               
@@ -215,15 +289,35 @@ export default function DashboardPage() {
               </div>
               
               <div className="flex items-center gap-6 ml-4">
-                <div className="flex items-center text-sm text-gray-500">
-                  <Clock className="w-4 h-4 mr-1.5" />
-                  {slide.duration_seconds}s
+                <div className="flex items-center text-sm text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                  <Clock className="w-4 h-4 mr-2 text-gray-400" />
+                  <input 
+                    type="number"
+                    min="3"
+                    max="60"
+                    className="w-12 bg-transparent border-none focus:outline-none focus:ring-0 p-0 text-center font-medium"
+                    value={slide.duration_seconds}
+                    onChange={(e) => {
+                      const newDuration = Number(e.target.value);
+                      if (newDuration >= 3) {
+                        updateSlideAsync(slide.id, { duration_seconds: newDuration });
+                      }
+                    }}
+                  />
+                  <span>s</span>
                 </div>
                 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => handleEditClick(slide)}
+                    className="text-gray-400 hover:text-blue-600 p-2 rounded hover:bg-blue-50 transition-colors"
+                    title="Editar slide"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
                   <button 
                     onClick={() => toggleSlideStatusAsync(slide.id)}
-                    className="text-gray-400 hover:text-gray-900 text-sm font-medium px-2 py-1 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
+                    className={`text-sm font-medium px-3 py-1.5 rounded transition-colors ${slide.is_active ? 'text-gray-600 bg-gray-100 hover:bg-gray-200' : 'text-blue-600 bg-blue-50 hover:bg-blue-100'}`}
                   >
                     {slide.is_active ? 'Desativar' : 'Ativar'}
                   </button>
@@ -234,7 +328,8 @@ export default function DashboardPage() {
                         catch (e) { alert('Erro ao excluir'); }
                       }
                     }}
-                    className="text-gray-400 hover:text-red-600 p-1 transition-colors"
+                    className="text-gray-400 hover:text-red-600 p-2 rounded hover:bg-red-50 transition-colors"
+                    title="Excluir slide"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -250,15 +345,17 @@ export default function DashboardPage() {
         isOpen={isModalOpen} 
         onClose={() => {
           setIsModalOpen(false);
+          setEditingSlideId(null);
           setNewSlideImages([]);
           setNewSlideContent('');
         }}
-        title="Adicionar Novo Slide"
+        title={editingSlideId ? "Editar Slide" : "Adicionar Novo Slide"}
         footer={
           <>
             <button 
               onClick={() => {
                 setIsModalOpen(false);
+                setEditingSlideId(null);
                 setNewSlideImages([]);
                 setNewSlideContent('');
               }}
@@ -291,8 +388,9 @@ export default function DashboardPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Slide</label>
             <select 
               value={newSlideType} 
+              disabled={!!editingSlideId}
               onChange={(e) => setNewSlideType(e.target.value as SlideType)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
             >
               <option value="image">Imagem</option>
               <option value="text">Texto Simples</option>
@@ -302,9 +400,9 @@ export default function DashboardPage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              {newSlideType === 'image' ? 'Upload de Imagem' : 'Conteúdo do Texto'}
+              {newSlideType === 'image' && !editingSlideId ? 'Upload de Imagem' : 'Conteúdo do Texto'}
             </label>
-            {newSlideType === 'image' ? (
+            {newSlideType === 'image' && !editingSlideId ? (
               <div className="space-y-3">
                 <div className="flex items-center justify-center w-full">
                   <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
@@ -349,15 +447,23 @@ export default function DashboardPage() {
                 )}
               </div>
             ) : (
-              <textarea 
-                value={newSlideContent}
-                onChange={(e) => setNewSlideContent(e.target.value)}
-                placeholder="Digite a mensagem que aparecerá na TV..."
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+              <div>
+                {newSlideType === 'image' && editingSlideId ? (
+                  <div className="p-4 bg-blue-50 text-blue-700 rounded-lg text-sm border border-blue-100">
+                    A imagem não pode ser trocada na edição. Se desejar usar outra foto, exclua este slide e crie um novo. Você ainda pode editar o tempo de exibição abaixo.
+                  </div>
+                ) : (
+                  <textarea 
+                    value={newSlideContent}
+                    onChange={(e) => setNewSlideContent(e.target.value)}
+                    placeholder="Digite a mensagem que aparecerá na TV..."
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                )}
+              </div>
             )}
-            {newSlideType === 'image' && (
+            {newSlideType === 'image' && !editingSlideId && (
               <p className="text-xs text-gray-500 mt-2">Formatos aceitos: JPG, PNG, WEBP.</p>
             )}
           </div>

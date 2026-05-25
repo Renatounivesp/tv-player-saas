@@ -19,6 +19,8 @@ interface AppState {
   
   // Actions Slides
   addSlideAsync: (slide: Omit<Slide, 'id' | 'created_at'>) => Promise<void>;
+  updateSlideAsync: (slideId: string, updates: Partial<Slide>) => Promise<void>;
+  updateSlidesOrderAsync: (orderedSlides: Slide[]) => Promise<void>;
   deleteSlideAsync: (slideId: string) => Promise<void>;
   toggleSlideStatusAsync: (slideId: string) => Promise<void>;
 }
@@ -124,6 +126,37 @@ export const useAppStore = create<AppState>()((set, get) => ({
     const { data, error } = await supabase.from('slides').insert([slideData]).select().single();
     if (error) throw error;
     set((state) => ({ slides: [...state.slides, data as Slide] }));
+  },
+
+  updateSlideAsync: async (slideId, updates) => {
+    const supabase = createClient();
+    const { data, error } = await supabase.from('slides').update(updates).eq('id', slideId).select().single();
+    if (error) throw error;
+    set((state) => ({
+      slides: state.slides.map(s => s.id === slideId ? (data as Slide) : s)
+    }));
+  },
+
+  updateSlidesOrderAsync: async (orderedSlides) => {
+    const supabase = createClient();
+    // Update local state immediately for snappy UI
+    set({ slides: orderedSlides });
+
+    // Send updates to Supabase
+    const updates = orderedSlides.map(slide => ({
+      id: slide.id,
+      clinic_id: slide.clinic_id,
+      order_index: slide.order_index,
+      duration_seconds: slide.duration_seconds,
+      is_active: slide.is_active,
+      type: slide.type
+    }));
+    
+    const { error } = await supabase.from('slides').upsert(updates);
+    if (error) {
+      console.error('Failed to save slide order', error);
+      // Ideally we would revert the state here if it fails
+    }
   },
   
   deleteSlideAsync: async (slideId) => {
