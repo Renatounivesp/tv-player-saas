@@ -24,6 +24,8 @@ export interface Clinic {
   show_clock?: boolean;
   show_logo?: boolean;
   default_transition?: SlideTransition;
+  background_music_url?: string;
+  music_volume?: number;
   status: ClinicStatus;
   plan_id: string;
   subscription_due_date: string;

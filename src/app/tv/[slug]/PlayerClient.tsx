@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Clinic, Slide, Ticker } from '@/lib/mock-data';
 import { AnimatePresence, motion, Variants } from 'framer-motion';
-import { Cloud, Sun, CloudRain, CloudLightning, Snowflake } from 'lucide-react';
+import { Cloud, Sun, CloudRain, CloudLightning, Snowflake, VolumeX, Volume2 } from 'lucide-react';
 
 const transitionVariants: Record<string, Variants> = {
   fade: {
@@ -43,6 +43,10 @@ export default function PlayerClient({ clinic, slides, tickers = [] }: PlayerCli
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
   
+  // Audio state
+  const [isAudioMuted, setIsAudioMuted] = useState(true);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+
   // Weather state
   const [weather, setWeather] = useState<{ temp: number, code: number } | null>(null);
 
@@ -95,6 +99,45 @@ export default function PlayerClient({ clinic, slides, tickers = [] }: PlayerCli
     return () => clearInterval(timer);
   }, [clinic.show_weather]);
 
+  // Audio Engine
+  useEffect(() => {
+    if (!clinic.background_music_url) return;
+
+    const audioEl = document.getElementById('bg-music') as HTMLAudioElement;
+    if (!audioEl) return;
+
+    audioEl.volume = (clinic.music_volume || 50) / 100;
+
+    const tryPlay = async () => {
+      try {
+        await audioEl.play();
+        setIsAudioMuted(false);
+        setIsAudioPlaying(true);
+      } catch (err) {
+        console.warn('Autoplay bloqueado pelo navegador. Aguardando interação do usuário.');
+        setIsAudioMuted(true);
+        setIsAudioPlaying(false);
+      }
+    };
+
+    tryPlay();
+  }, [clinic.background_music_url, clinic.music_volume]);
+
+  const handleUnmute = () => {
+    const audioEl = document.getElementById('bg-music') as HTMLAudioElement;
+    if (audioEl) {
+      if (isAudioMuted) {
+        audioEl.play().catch(e => console.error(e));
+        setIsAudioMuted(false);
+        setIsAudioPlaying(true);
+      } else {
+        audioEl.pause();
+        setIsAudioMuted(true);
+        setIsAudioPlaying(false);
+      }
+    }
+  };
+
   const slide = slides[currentIndex];
 
   const getWeatherIcon = (code: number) => {
@@ -110,6 +153,14 @@ export default function PlayerClient({ clinic, slides, tickers = [] }: PlayerCli
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-black">
+      {clinic.background_music_url && (
+        <audio 
+          id="bg-music" 
+          src={clinic.background_music_url} 
+          loop 
+        />
+      )}
+
       <style>{`
         @keyframes marquee {
           0% { transform: translateX(100vw); }
@@ -190,6 +241,22 @@ export default function PlayerClient({ clinic, slides, tickers = [] }: PlayerCli
         )}
 
         <div className="flex flex-col items-end gap-3 ml-auto">
+          {clinic.background_music_url && (
+            <button 
+              onClick={handleUnmute}
+              className="bg-black/60 hover:bg-black/80 backdrop-blur-md px-4 py-2 md:py-3 rounded-xl border border-white/20 text-white flex items-center gap-2 pointer-events-auto transition-all animate-pulse shadow-lg mb-2"
+            >
+              {isAudioMuted ? (
+                <>
+                  <VolumeX className="w-5 h-5 md:w-6 md:h-6 text-red-400" />
+                  <span className="text-sm font-bold">Toque para Som</span>
+                </>
+              ) : (
+                <Volume2 className="w-5 h-5 md:w-6 md:h-6 text-green-400" />
+              )}
+            </button>
+          )}
+
           {clinic.show_clock !== false && (
             <div className="bg-black/40 backdrop-blur-md px-4 md:px-6 py-2 md:py-3 rounded-xl border border-white/10 text-white text-right">
               <div className="text-xl md:text-2xl lg:text-3xl font-bold tracking-wider">

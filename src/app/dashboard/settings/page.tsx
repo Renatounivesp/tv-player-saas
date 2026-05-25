@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Palette, Link as LinkIcon, Monitor, Save } from 'lucide-react';
+import { Palette, Link as LinkIcon, Monitor, Save, Music } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { FrameStyle, SlideTransition } from '@/lib/mock-data';
 
@@ -16,6 +16,8 @@ export default function SettingsPage() {
   const [showWeather, setShowWeather] = useState(false);
   const [showClock, setShowClock] = useState(true);
   const [showLogo, setShowLogo] = useState(true);
+  const [backgroundMusicUrl, setBackgroundMusicUrl] = useState('');
+  const [musicVolume, setMusicVolume] = useState(50);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -27,6 +29,8 @@ export default function SettingsPage() {
       setShowWeather(clinic.show_weather || false);
       setShowClock(clinic.show_clock !== false); // default to true
       setShowLogo(clinic.show_logo !== false); // default to true
+      setBackgroundMusicUrl(clinic.background_music_url || '');
+      setMusicVolume(clinic.music_volume || 50);
     }
   }, [clinic]);
 
@@ -41,7 +45,9 @@ export default function SettingsPage() {
         default_transition: defaultTransition,
         show_weather: showWeather,
         show_clock: showClock,
-        show_logo: showLogo
+        show_logo: showLogo,
+        background_music_url: backgroundMusicUrl,
+        music_volume: musicVolume
       });
       alert('Configurações salvas com sucesso!');
     } catch (error) {
@@ -97,6 +103,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* Settings da TV */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm space-y-4">
           <div className="flex items-center gap-2 border-b border-gray-100 pb-4 mb-4">
             <Monitor className="w-5 h-5 text-gray-500" />
@@ -199,6 +206,42 @@ export default function SettingsPage() {
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-2">Este é o link que você deve abrir no navegador da sua TV.</p>
+          </div>
+        </div>
+
+        {/* Som e Música */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm space-y-4 md:col-span-2">
+          <div className="flex items-center gap-2 border-b border-gray-100 pb-4 mb-4">
+            <Music className="w-5 h-5 text-gray-500" />
+            <h2 className="text-lg font-semibold text-gray-900">Música Ambiente</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Link do Áudio (MP3)</label>
+              <input 
+                type="text" 
+                value={backgroundMusicUrl}
+                onChange={(e) => setBackgroundMusicUrl(e.target.value)}
+                placeholder="Ex: https://dominio.com/musica.mp3"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Deixe em branco para desligar o som.</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Volume: {musicVolume}%
+              </label>
+              <input 
+                type="range" 
+                min="0" 
+                max="100" 
+                value={musicVolume}
+                onChange={(e) => setMusicVolume(parseInt(e.target.value))}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-3"
+              />
+            </div>
           </div>
         </div>
       </div>
