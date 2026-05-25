@@ -51,7 +51,7 @@ export default function Home() {
           </div>
           
           <h1 className="text-5xl md:text-7xl font-extrabold text-gray-900 tracking-tight max-w-4xl mx-auto leading-tight mb-6">
-            A TV da sua clínica nunca foi tão <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">inteligente.</span>
+            A TV do seu negócio nunca foi tão <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">inteligente.</span>
           </h1>
           
           <p className="text-xl text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed">
