@@ -69,33 +69,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* MOCKUP PREVIEW */}
-        <div className="max-w-5xl mx-auto mt-20 px-6">
-          <div className="relative rounded-2xl bg-gray-900 p-2 shadow-2xl overflow-hidden ring-1 ring-gray-900/10">
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-            <div className="rounded-xl overflow-hidden bg-white aspect-video relative flex items-center justify-center">
-              {/* Abstract interface mockup */}
-              <div className="absolute inset-0 bg-gray-50 flex flex-col">
-                <div className="h-12 border-b border-gray-200 flex items-center px-4 gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-400"></div>
-                  <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-                  <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                </div>
-                <div className="flex-1 flex p-4 gap-4">
-                  <div className="w-48 bg-gray-200 rounded-lg hidden sm:block opacity-50"></div>
-                  <div className="flex-1 flex flex-col gap-4">
-                    <div className="h-32 bg-blue-100 rounded-xl border border-blue-200 animate-pulse"></div>
-                    <div className="flex-1 bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex gap-4">
-                      <div className="w-1/3 bg-gray-100 rounded-lg"></div>
-                      <div className="w-1/3 bg-gray-100 rounded-lg"></div>
-                      <div className="w-1/3 bg-gray-100 rounded-lg"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+
       </section>
 
       {/* FEATURES SECTION */}
