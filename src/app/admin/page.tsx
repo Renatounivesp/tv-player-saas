@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Users, CreditCard, Activity, AlertCircle, Plus } from 'lucide-react';
+import { Users, CreditCard, Activity, AlertCircle, Plus, Copy, ExternalLink, QrCode } from 'lucide-react';
 import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
 import { Modal } from '@/components/ui/Modal';
@@ -32,6 +32,16 @@ export default function AdminDashboard() {
   // Edit Status Modal State
   const [editingClinicId, setEditingClinicId] = useState<string | null>(null);
   const [editStatus, setEditStatus] = useState<ClinicStatus>('active');
+
+  // Share TV Modal State
+  const [shareClinic, setShareClinic] = useState<{slug: string, name: string} | null>(null);
+
+  const handleCopyLink = () => {
+    if (!shareClinic) return;
+    const url = `${window.location.origin}/tv/${shareClinic.slug}`;
+    navigator.clipboard.writeText(url);
+    alert('Link copiado para a área de transferência!');
+  };
 
   const handleCreateClinic = async () => {
     if (!newClinic.name || !newClinic.slug) return alert('Nome e Slug são obrigatórios.');
@@ -185,13 +195,13 @@ export default function AdminDashboard() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <Link 
-                        href={`/tv/${clinic.slug}`} 
-                        target="_blank"
-                        className="text-blue-600 hover:underline mr-4 font-medium"
+                      <button 
+                        onClick={() => setShareClinic({slug: clinic.slug, name: clinic.name})}
+                        className="text-blue-600 hover:underline mr-4 font-medium flex-inline items-center"
                       >
-                        Ver TV
-                      </Link>
+                        <QrCode className="w-4 h-4 inline mr-1" />
+                        Acessar TV
+                      </button>
                       <button 
                         onClick={() => openEditModal(clinic)}
                         className="text-gray-600 hover:text-gray-900 font-medium bg-gray-100 px-3 py-1 rounded transition-colors"
@@ -338,6 +348,63 @@ export default function AdminDashboard() {
               <option value="blocked">Bloqueado (Bloqueia a TV)</option>
               <option value="lifetime">Vitalício (Acesso permanente)</option>
             </select>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal Compartilhar TV */}
+      <Modal
+        isOpen={!!shareClinic}
+        onClose={() => setShareClinic(null)}
+        title={`Acesso da TV - ${shareClinic?.name}`}
+        footer={
+          <>
+            <button 
+              onClick={() => setShareClinic(null)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              Fechar
+            </button>
+            <Link 
+              href={`/tv/${shareClinic?.slug}`}
+              target="_blank"
+              className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Abrir TV Nova Guia
+            </Link>
+          </>
+        }
+      >
+        <div className="space-y-6">
+          <div className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <p className="text-sm text-gray-500 mb-4 font-medium">Escaneie o QR Code para abrir na TV</p>
+            {shareClinic && (
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(typeof window !== 'undefined' ? `${window.location.origin}/tv/${shareClinic.slug}` : '')}`} 
+                alt="QR Code TV" 
+                className="w-48 h-48 rounded-lg shadow-sm border border-gray-200"
+              />
+            )}
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Link de Acesso Direto</label>
+            <div className="flex gap-2">
+              <input 
+                type="text" 
+                readOnly
+                value={typeof window !== 'undefined' && shareClinic ? `${window.location.origin}/tv/${shareClinic.slug}` : ''}
+                className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-600 text-sm focus:outline-none"
+              />
+              <button 
+                onClick={handleCopyLink}
+                className="flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 rounded-lg transition-colors"
+                title="Copiar Link"
+              >
+                <Copy className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </Modal>
