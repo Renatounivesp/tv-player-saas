@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, MonitorPlay, Image as ImageIcon, Settings, LogOut } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { LayoutDashboard, MonitorPlay, Image as ImageIcon, Settings, LogOut, Menu, X } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { createClient } from '@/utils/supabase/client';
 
@@ -13,6 +14,13 @@ export default function DashboardLayout({
 }) {
   const { clinics, isLoading, fetchInitialData } = useAppStore();
   const supabase = createClient();
+  const pathname = usePathname();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Fecha o menu mobile quando a rota muda
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -95,18 +103,94 @@ export default function DashboardLayout({
               <span className="text-sm font-medium text-gray-900">Ativa</span>
             </div>
           </div>
-          <button onClick={handleLogout} className="flex items-center w-full px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100 transition-colors">
-            <LogOut className="w-5 h-5 mr-3 text-gray-400" />
+          <button onClick={handleLogout} className="flex items-center w-full px-3 py-2 text-sm font-medium rounded-md text-red-600 hover:bg-red-50 transition-colors">
+            <LogOut className="w-5 h-5 mr-3 text-red-500" />
             Sair
           </button>
         </div>
       </aside>
 
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex">
+          <div className="fixed inset-0 bg-gray-900/80 transition-opacity" onClick={() => setIsMobileMenuOpen(false)}></div>
+          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white h-full shadow-xl">
+            <div className="absolute top-0 right-0 -mr-12 pt-4">
+              <button
+                className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <X className="h-6 w-6 text-white" aria-hidden="true" />
+              </button>
+            </div>
+            
+            <div className="h-16 flex items-center px-6 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <div 
+                  className="w-8 h-8 rounded-md flex items-center justify-center text-white font-bold"
+                  style={{ backgroundColor: clinic.primary_color }}
+                >
+                  {clinic.name.charAt(0)}
+                </div>
+                <span className="text-sm font-bold text-gray-900 truncate">{clinic.name}</span>
+              </div>
+            </div>
+            
+            <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+              <Link href="/dashboard" className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-900 hover:bg-gray-100">
+                <LayoutDashboard className="w-5 h-5 mr-3 text-gray-500" />
+                Meus Slides
+              </Link>
+              <Link href="/dashboard/media" className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100">
+                <ImageIcon className="w-5 h-5 mr-3 text-gray-400" />
+                Galeria de Mídia
+              </Link>
+              <Link href={`/tv/${clinic.slug}`} target="_blank" className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100">
+                <MonitorPlay className="w-5 h-5 mr-3 text-gray-400" />
+                Visualizar TV
+              </Link>
+              <Link href="/dashboard/settings" className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100">
+                <Settings className="w-5 h-5 mr-3 text-gray-400" />
+                Configurações
+              </Link>
+            </nav>
+            
+            <div className="p-4 border-t border-gray-200">
+              <div className="mb-4 px-3">
+                <p className="text-xs text-gray-500 mb-1">Status da Assinatura</p>
+                <div className="flex items-center">
+                  <span className="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+                  <span className="text-sm font-medium text-gray-900">Ativa</span>
+                </div>
+              </div>
+              <button onClick={handleLogout} className="flex items-center w-full px-3 py-2 text-sm font-medium rounded-md text-red-600 hover:bg-red-50 transition-colors">
+                <LogOut className="w-5 h-5 mr-3 text-red-500" />
+                Sair
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile header */}
-        <header className="md:hidden h-16 bg-white border-b border-gray-200 flex items-center px-4">
-          <span className="text-xl font-bold text-gray-900">{clinic.name}</span>
+        <header className="md:hidden h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sticky top-0 z-30">
+          <div className="flex items-center gap-3">
+            <div 
+              className="w-8 h-8 rounded-md flex items-center justify-center text-white font-bold"
+              style={{ backgroundColor: clinic.primary_color }}
+            >
+              {clinic.name.charAt(0)}
+            </div>
+            <span className="text-xl font-bold text-gray-900 truncate max-w-[200px]">{clinic.name}</span>
+          </div>
+          <button 
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="p-2 -mr-2 text-gray-600 hover:bg-gray-100 rounded-lg focus:outline-none"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
         </header>
         
         <div className="flex-1 overflow-y-auto">
