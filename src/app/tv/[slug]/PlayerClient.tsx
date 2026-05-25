@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Clinic, Slide, Ticker } from '@/lib/mock-data';
 import { AnimatePresence, motion, Variants } from 'framer-motion';
-import { Cloud, Sun, CloudRain, CloudLightning, Snowflake, VolumeX, Volume2 } from 'lucide-react';
+import { Cloud, Sun, CloudRain, CloudLightning, Snowflake, VolumeX, Volume2, Maximize, Minimize } from 'lucide-react';
 
 const transitionVariants: Record<string, Variants> = {
   fade: {
@@ -140,6 +140,27 @@ export default function PlayerClient({ clinic, slides, tickers = [] }: PlayerCli
 
   const slide = slides[currentIndex];
 
+  // Fullscreen state
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error(`Erro ao tentar entrar em tela cheia: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
   const getWeatherIcon = (code: number) => {
     if (code === 0) return <Sun className="w-6 h-6 md:w-8 md:h-8 text-yellow-400" />;
     if (code >= 1 && code <= 48) return <Cloud className="w-6 h-6 md:w-8 md:h-8 text-gray-300" />;
@@ -241,19 +262,33 @@ export default function PlayerClient({ clinic, slides, tickers = [] }: PlayerCli
         )}
 
         <div className="flex flex-col items-end gap-3 ml-auto">
-          {clinic.background_music_url && (
+          <div className="flex gap-2 mb-2">
             <button 
-              onClick={handleUnmute}
-              className="pointer-events-auto transition-opacity opacity-30 hover:opacity-100 p-2 mb-2"
-              title={isAudioMuted ? "Ativar Som" : "Desativar Som"}
+              onClick={toggleFullscreen}
+              className="pointer-events-auto transition-opacity opacity-30 hover:opacity-100 p-2"
+              title={isFullscreen ? "Sair da Tela Cheia" : "Tela Cheia"}
             >
-              {isAudioMuted ? (
-                <VolumeX className="w-4 h-4 md:w-5 md:h-5 text-white" />
+              {isFullscreen ? (
+                <Minimize className="w-4 h-4 md:w-5 md:h-5 text-white" />
               ) : (
-                <Volume2 className="w-4 h-4 md:w-5 md:h-5 text-white" />
+                <Maximize className="w-4 h-4 md:w-5 md:h-5 text-white" />
               )}
             </button>
-          )}
+
+            {clinic.background_music_url && (
+              <button 
+                onClick={handleUnmute}
+                className="pointer-events-auto transition-opacity opacity-30 hover:opacity-100 p-2"
+                title={isAudioMuted ? "Ativar Som" : "Desativar Som"}
+              >
+                {isAudioMuted ? (
+                  <VolumeX className="w-4 h-4 md:w-5 md:h-5 text-white" />
+                ) : (
+                  <Volume2 className="w-4 h-4 md:w-5 md:h-5 text-white" />
+                )}
+              </button>
+            )}
+          </div>
 
           {clinic.show_clock !== false && (
             <div className="bg-black/40 backdrop-blur-md px-4 md:px-6 py-2 md:py-3 rounded-xl border border-white/10 text-white text-right">
