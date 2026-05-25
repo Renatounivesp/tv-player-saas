@@ -1,4 +1,4 @@
-export type ClinicStatus = 'active' | 'pending' | 'overdue' | 'blocked';
+export type ClinicStatus = 'active' | 'pending' | 'overdue' | 'blocked' | 'lifetime';
 export type SlideType = 'image' | 'video' | 'text' | 'promo';
 
 export interface Plan {

@@ -50,12 +50,14 @@ export default function AdminClinicsPage() {
                 pending: 'bg-yellow-100 text-yellow-800',
                 overdue: 'bg-red-100 text-red-800',
                 blocked: 'bg-gray-100 text-gray-800',
+                lifetime: 'bg-purple-100 text-purple-800',
               };
               const statusLabels = {
                 active: 'Ativo',
                 pending: 'Pendente',
                 overdue: 'Vencido',
                 blocked: 'Bloqueado',
+                lifetime: 'Vitalício',
               };
 
               return (

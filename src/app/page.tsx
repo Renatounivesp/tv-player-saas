@@ -152,13 +152,13 @@ export default function Home() {
             <div className="relative rounded-3xl p-8 bg-white border border-blue-600 shadow-2xl scale-105 z-10">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-4 py-1.5 bg-green-500 text-white text-sm font-bold uppercase tracking-wider rounded-full shadow-sm flex items-center gap-1.5">
                 <Zap className="w-4 h-4" />
-                10 Dias Grátis
+                10 Dias Acesso Liberado
               </div>
               
               <div className="text-center mt-4 mb-8">
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Plano Ilimitado</h3>
                 <div className="flex items-baseline justify-center gap-1 mb-2">
-                  <span className="text-5xl font-extrabold text-gray-900">R$ 49</span>
+                  <span className="text-5xl font-extrabold text-gray-900">R$ 19,90</span>
                   <span className="text-gray-500 font-medium">/mês</span>
                 </div>
                 <p className="text-gray-500 text-sm">Cancele quando quiser.</p>

@@ -46,11 +46,18 @@ export default function PlayerClient({ clinic, slides }: PlayerClientProps) {
           className="absolute inset-0 flex items-center justify-center"
         >
           {slide.type === 'image' && slide.content_url && (
-            <img 
-              src={slide.content_url} 
-              alt="Slide" 
-              className="w-full h-full object-cover"
-            />
+            <>
+              {/* Premium Blurred Background */}
+              <div 
+                className="absolute inset-0 bg-cover bg-center blur-2xl opacity-40 scale-110"
+                style={{ backgroundImage: `url(${slide.content_url})` }}
+              />
+              <img 
+                src={slide.content_url} 
+                alt="Slide" 
+                className="relative z-10 w-full h-full object-contain p-2 md:p-0"
+              />
+            </>
           )}
 
           {slide.type === 'promo' && (
@@ -58,10 +65,10 @@ export default function PlayerClient({ clinic, slides }: PlayerClientProps) {
               className="w-full h-full flex flex-col items-center justify-center p-12 text-center"
               style={{ backgroundColor: clinic.primary_color }}
             >
-              <h1 className="text-white text-6xl md:text-8xl font-black mb-8 leading-tight">
+              <h1 className="text-white text-4xl md:text-6xl lg:text-8xl font-black mb-4 md:mb-8 leading-tight">
                 {slide.text_content}
               </h1>
-              <div className="bg-white text-gray-900 text-3xl font-bold py-4 px-8 rounded-full shadow-2xl animate-pulse">
+              <div className="bg-white text-gray-900 text-xl md:text-3xl font-bold py-3 md:py-4 px-6 md:px-8 rounded-full shadow-2xl animate-pulse">
                 Aproveite agora!
               </div>
             </div>
@@ -69,7 +76,7 @@ export default function PlayerClient({ clinic, slides }: PlayerClientProps) {
 
           {slide.type === 'text' && (
             <div className="w-full h-full flex items-center justify-center p-16 bg-gradient-to-br from-gray-900 to-gray-800">
-              <h1 className="text-white text-5xl md:text-7xl font-bold text-center leading-normal">
+              <h1 className="text-white text-3xl md:text-5xl lg:text-7xl font-bold text-center leading-normal">
                 {slide.text_content}
               </h1>
             </div>
@@ -78,26 +85,26 @@ export default function PlayerClient({ clinic, slides }: PlayerClientProps) {
       </AnimatePresence>
 
       {/* Floating Info (Logo and Clock) */}
-      <div className="absolute top-0 left-0 w-full p-8 flex justify-between items-start z-50 pointer-events-none drop-shadow-lg">
+      <div className="absolute top-0 left-0 w-full p-4 md:p-8 flex justify-between items-start z-50 pointer-events-none drop-shadow-lg">
         {clinic.logo_url ? (
           <img 
             src={clinic.logo_url} 
             alt={clinic.name} 
-            className="h-16 md:h-24 object-contain bg-white/10 backdrop-blur-md p-2 rounded-xl"
+            className="h-10 md:h-16 lg:h-24 object-contain bg-white/10 backdrop-blur-md p-2 rounded-xl"
           />
         ) : (
           <div 
-            className="text-white font-black text-3xl tracking-tight bg-black/30 backdrop-blur-md px-6 py-3 rounded-xl border border-white/10"
+            className="text-white font-black text-lg md:text-2xl lg:text-3xl tracking-tight bg-black/30 backdrop-blur-md px-4 md:px-6 py-2 md:py-3 rounded-xl border border-white/10"
           >
             {clinic.name}
           </div>
         )}
 
-        <div className="bg-black/40 backdrop-blur-md px-6 py-3 rounded-xl border border-white/10 text-white text-right">
-          <div className="text-3xl font-bold tracking-wider">
+        <div className="bg-black/40 backdrop-blur-md px-4 md:px-6 py-2 md:py-3 rounded-xl border border-white/10 text-white text-right">
+          <div className="text-xl md:text-2xl lg:text-3xl font-bold tracking-wider">
             {currentTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
           </div>
-          <div className="text-sm font-medium text-white/80">
+          <div className="text-xs md:text-sm font-medium text-white/80">
             {currentTime.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
           </div>
         </div>

@@ -161,12 +161,14 @@ export default function AdminDashboard() {
                   pending: 'bg-yellow-100 text-yellow-800',
                   overdue: 'bg-red-100 text-red-800',
                   blocked: 'bg-gray-100 text-gray-800',
+                  lifetime: 'bg-purple-100 text-purple-800',
                 };
                 const statusLabels = {
                   active: 'Ativo',
                   pending: 'Pendente',
                   overdue: 'Vencido',
                   blocked: 'Bloqueado',
+                  lifetime: 'Vitalício',
                 };
 
                 return (
@@ -334,6 +336,7 @@ export default function AdminDashboard() {
               <option value="pending">Pendente</option>
               <option value="overdue">Vencido (Bloqueia a TV)</option>
               <option value="blocked">Bloqueado (Bloqueia a TV)</option>
+              <option value="lifetime">Vitalício (Acesso permanente)</option>
             </select>
           </div>
         </div>

@@ -3,20 +3,21 @@
 import { useEffect } from 'react';
 import PlayerClient from './PlayerClient';
 import { useAppStore } from '@/lib/store';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 
 export default function TvPlayerWrapper({ slug }: { slug: string }) {
-  const { clinics, slides, isLoading, fetchInitialData } = useAppStore();
+  const { clinics, slides, isLoading, fetchTvData } = useAppStore();
 
   const clinic = clinics.find(c => c.slug === slug);
   const clinicId = clinic?.id;
 
   useEffect(() => {
     // 1. Busca os dados iniciais assim que a TV liga
-    fetchInitialData();
+    fetchTvData(slug);
 
     if (!clinicId) return;
 
+    const supabase = createClient();
     // 2. Conecta no Supabase via WebSockets para ouvir mudanças em Tempo Real
     const channel = supabase
       .channel('tv-realtime')
@@ -26,7 +27,7 @@ export default function TvPlayerWrapper({ slug }: { slug: string }) {
         (payload) => {
           console.log('Mudança detectada no banco de dados! Atualizando TV...', payload);
           // Recarrega os dados para pegar o novo slide ou status
-          fetchInitialData();
+          fetchTvData(slug);
         }
       )
       .subscribe();
@@ -34,7 +35,7 @@ export default function TvPlayerWrapper({ slug }: { slug: string }) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [clinicId, fetchInitialData]);
+  }, [clinicId, fetchTvData, slug]);
 
   if (isLoading) {
     return (

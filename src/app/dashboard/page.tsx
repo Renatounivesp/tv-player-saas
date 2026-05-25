@@ -19,44 +19,76 @@ export default function DashboardPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newSlideType, setNewSlideType] = useState<SlideType>('image');
   const [newSlideContent, setNewSlideContent] = useState('');
+  const [newSlideImages, setNewSlideImages] = useState<string[]>([]);
   const [newSlideDuration, setNewSlideDuration] = useState(10);
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const files = e.target.files;
+    if (files && files.length > 0) {
       setIsUploading(true);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNewSlideContent(reader.result as string);
-        setIsUploading(false);
-      };
-      reader.readAsDataURL(file);
+      const newImages: string[] = [];
+      let loaded = 0;
+
+      Array.from(files).forEach((file) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          newImages.push(reader.result as string);
+          loaded++;
+          if (loaded === files.length) {
+            setNewSlideImages(prev => [...prev, ...newImages]);
+            setIsUploading(false);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
     }
+    // Limpar o input para permitir selecionar os mesmos arquivos novamente
+    e.target.value = '';
   };
 
   const handleCreateSlide = async () => {
-    if (!newSlideContent) {
-      alert('Por favor, informe o conteúdo do slide (faça o upload da imagem ou digite o texto).');
+    if (newSlideType === 'image' && newSlideImages.length === 0) {
+      alert('Por favor, faça o upload de pelo menos uma imagem.');
+      return;
+    }
+    if (newSlideType !== 'image' && !newSlideContent) {
+      alert('Por favor, digite o conteúdo do texto.');
       return;
     }
 
     setIsSaving(true);
 
     try {
-      await addSlideAsync({
-        clinic_id: clinic.id,
-        type: newSlideType,
-        content_url: newSlideType === 'image' || newSlideType === 'video' ? newSlideContent : undefined,
-        text_content: newSlideType === 'text' || newSlideType === 'promo' ? newSlideContent : undefined,
-        duration_seconds: newSlideDuration,
-        order_index: clinicSlides.length,
-        is_active: true,
-      });
+      if (newSlideType === 'image') {
+        // Enviar multiplas imagens
+        const promises = newSlideImages.map((imgBase64, index) => 
+          addSlideAsync({
+            clinic_id: clinic.id,
+            type: 'image',
+            content_url: imgBase64,
+            duration_seconds: newSlideDuration,
+            order_index: clinicSlides.length + index,
+            is_active: true,
+          })
+        );
+        await Promise.all(promises);
+      } else {
+        // Texto ou promo
+        await addSlideAsync({
+          clinic_id: clinic.id,
+          type: newSlideType,
+          text_content: newSlideContent,
+          duration_seconds: newSlideDuration,
+          order_index: clinicSlides.length,
+          is_active: true,
+        });
+      }
 
       setIsModalOpen(false);
       setNewSlideContent('');
+      setNewSlideImages([]);
       setNewSlideDuration(10);
     } catch (error: any) {
       console.error(error);
@@ -181,12 +213,20 @@ export default function DashboardPage() {
       {/* Modal de Novo Slide */}
       <Modal 
         isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setNewSlideImages([]);
+          setNewSlideContent('');
+        }}
         title="Adicionar Novo Slide"
         footer={
           <>
             <button 
-              onClick={() => setIsModalOpen(false)}
+              onClick={() => {
+                setIsModalOpen(false);
+                setNewSlideImages([]);
+                setNewSlideContent('');
+              }}
               className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             >
               Cancelar
@@ -236,24 +276,40 @@ export default function DashboardPage() {
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
                       <ImageIcon className="w-8 h-8 text-gray-400 mb-2" />
                       <p className="text-sm text-gray-500 font-medium">
-                        {isUploading ? 'Carregando imagem...' : 'Clique para fazer o upload da imagem'}
+                        {isUploading ? 'Carregando imagens...' : 'Clique para selecionar várias imagens'}
                       </p>
                     </div>
                     <input 
                       id="dropzone-file" 
                       type="file" 
                       accept="image/*"
+                      multiple
                       onChange={handleImageUpload}
                       className="hidden" 
                     />
                   </label>
                 </div>
-                {newSlideContent && newSlideContent.startsWith('data:image') && (
-                  <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 p-2 rounded border border-green-200">
-                    <div className="w-8 h-8 rounded bg-gray-200 overflow-hidden flex-shrink-0">
-                      <img src={newSlideContent} alt="Preview" className="w-full h-full object-cover" />
+                {newSlideImages.length > 0 && (
+                  <div className="flex flex-col gap-2 mt-3">
+                    <p className="text-sm font-medium text-gray-700">{newSlideImages.length} imagem(ns) selecionada(s):</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {newSlideImages.map((img, idx) => (
+                        <div key={idx} className="relative group w-16 h-16 rounded bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-200">
+                          <img src={img} alt={`Preview ${idx}`} className="w-full h-full object-cover" />
+                          <button 
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setNewSlideImages(prev => prev.filter((_, i) => i !== idx));
+                            }}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
                     </div>
-                    <span>Imagem carregada com sucesso!</span>
                   </div>
                 )}
               </div>
