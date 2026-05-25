@@ -85,10 +85,6 @@ export default function DashboardLayout({
             <MessageSquareText className="w-5 h-5 mr-3 text-gray-400" />
             Letreiros
           </Link>
-          <Link href="/dashboard/media" className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100">
-            <ImageIcon className="w-5 h-5 mr-3 text-gray-400" />
-            Galeria de Mídia
-          </Link>
           <Link href={`/tv/${clinic.slug}`} target="_blank" className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100">
             <MonitorPlay className="w-5 h-5 mr-3 text-gray-400" />
             Visualizar TV
@@ -148,10 +144,6 @@ export default function DashboardLayout({
               <Link href="/dashboard/tickers" className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100">
                 <MessageSquareText className="w-5 h-5 mr-3 text-gray-400" />
                 Letreiros
-              </Link>
-              <Link href="/dashboard/media" className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100">
-                <ImageIcon className="w-5 h-5 mr-3 text-gray-400" />
-                Galeria de Mídia
               </Link>
               <Link href={`/tv/${clinic.slug}`} target="_blank" className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100">
                 <MonitorPlay className="w-5 h-5 mr-3 text-gray-400" />
