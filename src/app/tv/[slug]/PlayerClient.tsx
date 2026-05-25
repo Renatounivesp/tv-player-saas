@@ -244,15 +244,13 @@ export default function PlayerClient({ clinic, slides, tickers = [] }: PlayerCli
           {clinic.background_music_url && (
             <button 
               onClick={handleUnmute}
-              className="bg-black/60 hover:bg-black/80 backdrop-blur-md px-4 py-2 md:py-3 rounded-xl border border-white/20 text-white flex items-center gap-2 pointer-events-auto transition-all animate-pulse shadow-lg mb-2"
+              className="pointer-events-auto transition-opacity opacity-30 hover:opacity-100 p-2 mb-2"
+              title={isAudioMuted ? "Ativar Som" : "Desativar Som"}
             >
               {isAudioMuted ? (
-                <>
-                  <VolumeX className="w-5 h-5 md:w-6 md:h-6 text-red-400" />
-                  <span className="text-sm font-bold">Toque para Som</span>
-                </>
+                <VolumeX className="w-4 h-4 md:w-5 md:h-5 text-white" />
               ) : (
-                <Volume2 className="w-5 h-5 md:w-6 md:h-6 text-green-400" />
+                <Volume2 className="w-4 h-4 md:w-5 md:h-5 text-white" />
               )}
             </button>
           )}
