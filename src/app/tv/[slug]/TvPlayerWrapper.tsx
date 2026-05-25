@@ -66,6 +66,7 @@ export default function TvPlayerWrapper({ slug }: { slug: string }) {
   }
 
   const clinicSlides = slides.filter(s => s.clinic_id === clinic.id && s.is_active);
+  const clinicTickers = useAppStore.getState().tickers.filter(t => t.clinic_id === clinic.id && t.is_active);
 
   if (clinicSlides.length === 0) {
     return (
@@ -78,5 +79,5 @@ export default function TvPlayerWrapper({ slug }: { slug: string }) {
     );
   }
 
-  return <PlayerClient clinic={clinic} slides={clinicSlides} />;
+  return <PlayerClient clinic={clinic} slides={clinicSlides} tickers={clinicTickers} />;
 }

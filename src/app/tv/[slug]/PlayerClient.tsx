@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Clinic, Slide } from '@/lib/mock-data';
+import { Clinic, Slide, Ticker } from '@/lib/mock-data';
 import { AnimatePresence, motion, Variants } from 'framer-motion';
 import { Cloud, Sun, CloudRain, CloudLightning, Snowflake } from 'lucide-react';
 
@@ -36,9 +36,10 @@ const transitionVariants: Record<string, Variants> = {
 interface PlayerClientProps {
   clinic: Clinic;
   slides: Slide[];
+  tickers?: Ticker[];
 }
 
-export default function PlayerClient({ clinic, slides }: PlayerClientProps) {
+export default function PlayerClient({ clinic, slides, tickers = [] }: PlayerClientProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
   
@@ -105,8 +106,22 @@ export default function PlayerClient({ clinic, slides }: PlayerClientProps) {
     return <Sun className="w-6 h-6 md:w-8 md:h-8 text-yellow-400" />;
   };
 
+  const tickersText = tickers.length > 0 ? tickers.map(t => t.text_content).join('  ✦  ') : null;
+
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-black">
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translateX(100vw); }
+          100% { transform: translateX(-100%); }
+        }
+        .animate-marquee {
+          animation: marquee 30s linear infinite;
+          white-space: nowrap;
+          will-change: transform;
+        }
+      `}</style>
+
       <AnimatePresence mode="wait">
         <motion.div
           key={slide.id}
@@ -213,6 +228,20 @@ export default function PlayerClient({ clinic, slides }: PlayerClientProps) {
             borderImage: clinic.frame_style === 'gradient' ? `linear-gradient(135deg, ${clinic.primary_color} 0%, #000000 100%) 1` : 'none'
           }}
         />
+      )}
+
+      {/* Ticker / Letreiro Overlay */}
+      {tickersText && (
+        <div 
+          className="absolute bottom-0 left-0 w-full z-[60] bg-black/80 backdrop-blur-md border-t border-white/20 py-3 overflow-hidden flex items-center"
+          style={{ 
+            borderTopColor: clinic.primary_color 
+          }}
+        >
+          <div className="animate-marquee inline-block text-white text-2xl font-semibold tracking-wide">
+            {tickersText}
+          </div>
+        </div>
       )}
     </div>
   );

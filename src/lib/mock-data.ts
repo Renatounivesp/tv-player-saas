@@ -47,6 +47,15 @@ export interface Slide {
   created_at: string;
 }
 
+export interface Ticker {
+  id: string;
+  clinic_id: string;
+  text_content: string;
+  is_active: boolean;
+  order_index: number;
+  created_at: string;
+}
+
 export const MOCK_PLANS: Plan[] = [
   {
     id: 'p_unico',

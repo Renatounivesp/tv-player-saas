@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, MonitorPlay, Image as ImageIcon, Settings, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, MonitorPlay, Image as ImageIcon, Settings, LogOut, Menu, X, MessageSquareText } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { createClient } from '@/utils/supabase/client';
 
@@ -77,9 +77,13 @@ export default function DashboardLayout({
         </div>
         
         <nav className="flex-1 py-4 px-3 space-y-1">
-          <Link href="/dashboard" className="flex items-center px-3 py-2 text-sm font-medium rounded-md bg-gray-100 text-gray-900">
-            <LayoutDashboard className="w-5 h-5 mr-3 text-gray-500" />
+          <Link href="/dashboard" className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100">
+            <LayoutDashboard className="w-5 h-5 mr-3 text-gray-400" />
             Meus Slides
+          </Link>
+          <Link href="/dashboard/tickers" className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100">
+            <MessageSquareText className="w-5 h-5 mr-3 text-gray-400" />
+            Letreiros
           </Link>
           <Link href="/dashboard/media" className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100">
             <ImageIcon className="w-5 h-5 mr-3 text-gray-400" />
@@ -137,9 +141,13 @@ export default function DashboardLayout({
             </div>
             
             <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
-              <Link href="/dashboard" className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-900 hover:bg-gray-100">
-                <LayoutDashboard className="w-5 h-5 mr-3 text-gray-500" />
+              <Link href="/dashboard" className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100">
+                <LayoutDashboard className="w-5 h-5 mr-3 text-gray-400" />
                 Meus Slides
+              </Link>
+              <Link href="/dashboard/tickers" className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100">
+                <MessageSquareText className="w-5 h-5 mr-3 text-gray-400" />
+                Letreiros
               </Link>
               <Link href="/dashboard/media" className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100">
                 <ImageIcon className="w-5 h-5 mr-3 text-gray-400" />

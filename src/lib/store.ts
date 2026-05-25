@@ -1,11 +1,12 @@
 import { create } from 'zustand';
-import { Clinic, Slide, Plan, ClinicStatus } from './mock-data';
+import { Clinic, Slide, Plan, Ticker, ClinicStatus } from './mock-data';
 import { createClient } from '@/utils/supabase/client';
 
 interface AppState {
   clinics: Clinic[];
   slides: Slide[];
   plans: Plan[];
+  tickers: Ticker[];
   
   // Data Loading
   isLoading: boolean;
@@ -23,25 +24,30 @@ interface AppState {
   updateSlidesOrderAsync: (orderedSlides: Slide[]) => Promise<void>;
   deleteSlideAsync: (slideId: string) => Promise<void>;
   toggleSlideStatusAsync: (slideId: string) => Promise<void>;
+  
+  // Actions Tickers
+  addTickerAsync: (ticker: Omit<Ticker, 'id' | 'created_at'>) => Promise<void>;
+  updateTickerAsync: (tickerId: string, updates: Partial<Ticker>) => Promise<void>;
+  updateTickersOrderAsync: (orderedTickers: Ticker[]) => Promise<void>;
+  deleteTickerAsync: (tickerId: string) => Promise<void>;
+  toggleTickerStatusAsync: (tickerId: string) => Promise<void>;
 }
 
 export const useAppStore = create<AppState>()((set, get) => ({
   clinics: [],
   slides: [],
   plans: [],
+  tickers: [],
   isLoading: true,
   
   fetchInitialData: async () => {
     const supabase = createClient();
     set({ isLoading: true });
     try {
-      // Pega o usuário logado atualmente
       const { data: { user } } = await supabase.auth.getUser();
 
       let clinicsQuery = supabase.from('clinics').select('*');
       
-      // Se for o dono do sistema (usando o painel admin), talvez mostre todas.
-      // Mas para a segurança do MVP, filtramos pela clínica que o usuário criou:
       if (user) {
         clinicsQuery = clinicsQuery.eq('user_id', user.id);
       }
@@ -54,19 +60,24 @@ export const useAppStore = create<AppState>()((set, get) => ({
       if (clinicsRes.error) throw clinicsRes.error;
       if (plansRes.error) throw plansRes.error;
 
-      // Pegar os slides de todas as clínicas do usuário (normalmente é só 1 clínica)
       const clinicIds = clinicsRes.data ? clinicsRes.data.map(c => c.id) : [];
       let slidesRes: any = { data: [], error: null };
+      let tickersRes: any = { data: [], error: null };
       
       if (clinicIds.length > 0) {
-        slidesRes = await supabase.from('slides').select('*').in('clinic_id', clinicIds).order('order_index', { ascending: true });
+        [slidesRes, tickersRes] = await Promise.all([
+          supabase.from('slides').select('*').in('clinic_id', clinicIds).order('order_index', { ascending: true }),
+          supabase.from('tickers').select('*').in('clinic_id', clinicIds).order('order_index', { ascending: true })
+        ]);
         if (slidesRes.error) throw slidesRes.error;
+        if (tickersRes.error) throw tickersRes.error;
       }
 
       set({
         clinics: clinicsRes.data as Clinic[],
         slides: slidesRes.data as Slide[],
         plans: plansRes.data as Plan[],
+        tickers: tickersRes.data as Ticker[],
         isLoading: false
       });
     } catch (error) {
@@ -84,10 +95,14 @@ export const useAppStore = create<AppState>()((set, get) => ({
       
       const { data: slides, error: slidesError } = await supabase.from('slides').select('*').eq('clinic_id', clinic.id).order('order_index', { ascending: true });
       if (slidesError) throw slidesError;
+
+      const { data: tickers, error: tickersError } = await supabase.from('tickers').select('*').eq('clinic_id', clinic.id).order('order_index', { ascending: true });
+      if (tickersError) throw tickersError;
       
       set({
         clinics: [clinic],
         slides: slides as Slide[],
+        tickers: tickers as Ticker[],
         isLoading: false
       });
     } catch (error) {
@@ -139,10 +154,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
 
   updateSlidesOrderAsync: async (orderedSlides) => {
     const supabase = createClient();
-    // Update local state immediately for snappy UI
     set({ slides: orderedSlides });
 
-    // Send updates to Supabase
     const updates = orderedSlides.map(slide => ({
       id: slide.id,
       clinic_id: slide.clinic_id,
@@ -155,7 +168,6 @@ export const useAppStore = create<AppState>()((set, get) => ({
     const { error } = await supabase.from('slides').upsert(updates);
     if (error) {
       console.error('Failed to save slide order', error);
-      // Ideally we would revert the state here if it fails
     }
   },
   
@@ -181,6 +193,62 @@ export const useAppStore = create<AppState>()((set, get) => ({
     if (error) throw error;
     set((state) => ({
       slides: state.slides.map(s => s.id === slideId ? (data as Slide) : s)
+    }));
+  },
+
+  addTickerAsync: async (tickerData) => {
+    const supabase = createClient();
+    const { data, error } = await supabase.from('tickers').insert([tickerData]).select().single();
+    if (error) throw error;
+    set((state) => ({ tickers: [...state.tickers, data as Ticker] }));
+  },
+
+  updateTickerAsync: async (tickerId, updates) => {
+    const supabase = createClient();
+    const { data, error } = await supabase.from('tickers').update(updates).eq('id', tickerId).select().single();
+    if (error) throw error;
+    set((state) => ({
+      tickers: state.tickers.map(t => t.id === tickerId ? (data as Ticker) : t)
+    }));
+  },
+
+  updateTickersOrderAsync: async (orderedTickers) => {
+    const supabase = createClient();
+    set({ tickers: orderedTickers });
+
+    const updates = orderedTickers.map(t => ({
+      id: t.id,
+      clinic_id: t.clinic_id,
+      order_index: t.order_index,
+      text_content: t.text_content,
+      is_active: t.is_active
+    }));
+    
+    const { error } = await supabase.from('tickers').upsert(updates);
+    if (error) console.error('Failed to save ticker order', error);
+  },
+
+  deleteTickerAsync: async (tickerId) => {
+    const supabase = createClient();
+    const { error } = await supabase.from('tickers').delete().eq('id', tickerId);
+    if (error) throw error;
+    set((state) => ({ tickers: state.tickers.filter(t => t.id !== tickerId) }));
+  },
+
+  toggleTickerStatusAsync: async (tickerId) => {
+    const supabase = createClient();
+    const ticker = get().tickers.find(t => t.id === tickerId);
+    if (!ticker) return;
+    
+    const { data, error } = await supabase
+      .from('tickers')
+      .update({ is_active: !ticker.is_active })
+      .eq('id', tickerId)
+      .select()
+      .single();
+    if (error) throw error;
+    set((state) => ({
+      tickers: state.tickers.map(t => t.id === tickerId ? (data as Ticker) : t)
     }));
   }
 }));
