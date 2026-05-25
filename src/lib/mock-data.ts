@@ -25,6 +25,8 @@ export interface Clinic {
   created_at: string;
 }
 
+export type SlideTransition = 'fade' | 'slideLeft' | 'slideRight' | 'slideUp' | 'zoom';
+
 export interface Slide {
   id: string;
   clinic_id: string;
@@ -34,6 +36,7 @@ export interface Slide {
   duration_seconds: number;
   order_index: number;
   is_active: boolean;
+  transition?: SlideTransition;
   start_date?: string;
   end_date?: string;
   created_at: string;

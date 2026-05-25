@@ -2,7 +2,35 @@
 
 import { useState, useEffect } from 'react';
 import { Clinic, Slide } from '@/lib/mock-data';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, Variants } from 'framer-motion';
+
+const transitionVariants: Record<string, Variants> = {
+  fade: {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 }
+  },
+  slideLeft: {
+    initial: { opacity: 0, x: 100 },
+    animate: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: -100 }
+  },
+  slideRight: {
+    initial: { opacity: 0, x: -100 },
+    animate: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: 100 }
+  },
+  slideUp: {
+    initial: { opacity: 0, y: 100 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -100 }
+  },
+  zoom: {
+    initial: { opacity: 0, scale: 1.05 },
+    animate: { opacity: 1, scale: 1 },
+    exit: { opacity: 0, scale: 0.95 }
+  }
+};
 
 interface PlayerClientProps {
   clinic: Clinic;
@@ -39,10 +67,11 @@ export default function PlayerClient({ clinic, slides }: PlayerClientProps) {
       <AnimatePresence mode="wait">
         <motion.div
           key={slide.id}
-          initial={{ opacity: 0, scale: 1.05 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 1.5, ease: "easeInOut" }}
+          variants={transitionVariants[slide.transition || 'fade']}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          transition={{ duration: 1.2, ease: "easeInOut" }}
           className="absolute inset-0 flex items-center justify-center"
         >
           {slide.type === 'image' && slide.content_url && (

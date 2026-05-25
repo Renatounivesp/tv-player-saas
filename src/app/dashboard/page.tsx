@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Plus, GripVertical, Image as ImageIcon, Type, Clock, Trash2, Play } from 'lucide-react';
 import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
-import { SlideType } from '@/lib/mock-data';
+import { SlideType, SlideTransition } from '@/lib/mock-data';
 import { Modal } from '@/components/ui/Modal';
 
 export default function DashboardPage() {
@@ -21,6 +21,7 @@ export default function DashboardPage() {
   const [newSlideContent, setNewSlideContent] = useState('');
   const [newSlideImages, setNewSlideImages] = useState<string[]>([]);
   const [newSlideDuration, setNewSlideDuration] = useState(10);
+  const [newSlideTransition, setNewSlideTransition] = useState<SlideTransition>('fade');
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -104,6 +105,7 @@ export default function DashboardPage() {
             type: 'image',
             content_url: imgBase64,
             duration_seconds: newSlideDuration,
+            transition: newSlideTransition,
             order_index: clinicSlides.length + index,
             is_active: true,
           })
@@ -116,6 +118,7 @@ export default function DashboardPage() {
           type: newSlideType,
           text_content: newSlideContent,
           duration_seconds: newSlideDuration,
+          transition: newSlideTransition,
           order_index: clinicSlides.length,
           is_active: true,
         });
@@ -125,6 +128,7 @@ export default function DashboardPage() {
       setNewSlideContent('');
       setNewSlideImages([]);
       setNewSlideDuration(10);
+      setNewSlideTransition('fade');
     } catch (error: any) {
       console.error(error);
       if (error?.message?.includes('payload too large') || error?.code === '413') {
@@ -252,6 +256,7 @@ export default function DashboardPage() {
           setIsModalOpen(false);
           setNewSlideImages([]);
           setNewSlideContent('');
+          setNewSlideTransition('fade');
         }}
         title="Adicionar Novo Slide"
         footer={
@@ -261,6 +266,7 @@ export default function DashboardPage() {
                 setIsModalOpen(false);
                 setNewSlideImages([]);
                 setNewSlideContent('');
+                setNewSlideTransition('fade');
               }}
               className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             >
@@ -362,16 +368,32 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Tempo de Exibição (segundos)</label>
-            <input 
-              type="number" 
-              min="3"
-              max="60"
-              value={newSlideDuration}
-              onChange={(e) => setNewSlideDuration(Number(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tempo (segundos)</label>
+              <input 
+                type="number" 
+                min="3"
+                max="60"
+                value={newSlideDuration}
+                onChange={(e) => setNewSlideDuration(Number(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Efeito de Transição</label>
+              <select 
+                value={newSlideTransition} 
+                onChange={(e) => setNewSlideTransition(e.target.value as SlideTransition)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="fade">Surgir Suave (Fade)</option>
+                <option value="slideLeft">Deslizar para Esquerda</option>
+                <option value="slideRight">Deslizar para Direita</option>
+                <option value="slideUp">Deslizar para Cima</option>
+                <option value="zoom">Aproximar (Zoom)</option>
+              </select>
+            </div>
           </div>
         </div>
       </Modal>
