@@ -23,6 +23,7 @@ export interface Clinic {
   show_weather?: boolean;
   show_clock?: boolean;
   show_logo?: boolean;
+  default_transition?: SlideTransition;
   status: ClinicStatus;
   plan_id: string;
   subscription_due_date: string;
@@ -41,7 +42,6 @@ export interface Slide {
   duration_seconds: number;
   order_index: number;
   is_active: boolean;
-  transition?: SlideTransition;
   start_date?: string;
   end_date?: string;
   created_at: string;

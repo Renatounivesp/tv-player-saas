@@ -110,7 +110,7 @@ export default function PlayerClient({ clinic, slides }: PlayerClientProps) {
       <AnimatePresence mode="wait">
         <motion.div
           key={slide.id}
-          variants={transitionVariants[slide.transition || 'fade']}
+          variants={transitionVariants[clinic.default_transition || 'fade']}
           initial="initial"
           animate="animate"
           exit="exit"

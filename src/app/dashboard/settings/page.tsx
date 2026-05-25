@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Palette, Link as LinkIcon, Monitor, Save } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
-import { FrameStyle } from '@/lib/mock-data';
+import { FrameStyle, SlideTransition } from '@/lib/mock-data';
 
 export default function SettingsPage() {
   const { clinics, updateClinicSettingsAsync } = useAppStore();
@@ -12,6 +12,7 @@ export default function SettingsPage() {
   const [primaryColor, setPrimaryColor] = useState('#0ea5e9');
   const [logoUrl, setLogoUrl] = useState('');
   const [frameStyle, setFrameStyle] = useState<FrameStyle>('none');
+  const [defaultTransition, setDefaultTransition] = useState<SlideTransition>('fade');
   const [showWeather, setShowWeather] = useState(false);
   const [showClock, setShowClock] = useState(true);
   const [showLogo, setShowLogo] = useState(true);
@@ -22,6 +23,7 @@ export default function SettingsPage() {
       setPrimaryColor(clinic.primary_color || '#0ea5e9');
       setLogoUrl(clinic.logo_url || '');
       setFrameStyle(clinic.frame_style || 'none');
+      setDefaultTransition(clinic.default_transition || 'fade');
       setShowWeather(clinic.show_weather || false);
       setShowClock(clinic.show_clock !== false); // default to true
       setShowLogo(clinic.show_logo !== false); // default to true
@@ -36,6 +38,7 @@ export default function SettingsPage() {
         primary_color: primaryColor,
         logo_url: logoUrl,
         frame_style: frameStyle,
+        default_transition: defaultTransition,
         show_weather: showWeather,
         show_clock: showClock,
         show_logo: showLogo
@@ -116,10 +119,18 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Transição Padrão</label>
-            <p className="text-sm text-gray-500">
-              * A transição agora é configurada individualmente na aba "Meus Slides".
-            </p>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Transição Padrão dos Slides</label>
+            <select 
+              value={defaultTransition}
+              onChange={(e) => setDefaultTransition(e.target.value as SlideTransition)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="fade">Surgir Suave (Fade)</option>
+              <option value="slideLeft">Deslizar para Esquerda</option>
+              <option value="slideRight">Deslizar para Direita</option>
+              <option value="slideUp">Deslizar para Cima</option>
+              <option value="zoom">Aproximar (Zoom)</option>
+            </select>
           </div>
 
           <div className="pt-4 border-t border-gray-100 space-y-6">
